@@ -38,4 +38,7 @@ results = radiation_pattern.calculate_radiation_pattern(sim,region_objs)
 theory_results = radiation_pattern.calculate_theoretical_radiation_pattern(0.0,constants.frequency)
 
 #Graph radiation patterns
-graph_patterns.plot_radiation_patterns(results,theory_results,"rad_pattern.png")
+#graph_patterns.plot_radiation_patterns(results,theory_results,"rad_pattern.png")
+
+#Beamwidth analysis
+print(radiation_pattern.locate_beams(results[0][0],results[0][1]))
