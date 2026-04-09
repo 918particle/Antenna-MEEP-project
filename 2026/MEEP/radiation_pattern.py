@@ -32,12 +32,19 @@ def calculate_theoretical_radiation_pattern(phi_0,frequency):
 			results.append(1.0/constants.n_antenna/constants.n_antenna)
 	results = 10.0*np.log10(results)-10.0*np.log10(constants.theory_normalization)
 	return (angles,results)
-def locate_beams(angles,radiation_pattern):
-	m = np.max(radiation_pattern)
+def locate_beams(angles,p):
 	results = []
-	for i in range(constants.npts):
-		if((m-radiation_pattern[i])<=constants.beam_threshold):
-			results.append(angles[i])
+	current_lobe = []
+	In = False
+	m = np.max(p)
+	for i in range(1,constants.npts):
+		if(not In and (m-p[i])<=constants.beam_threshold and (m-p[i-1])>=constants.beam_threshold):
+			In = True
+			current_lobe.append(angles[i]) if angles[i]<=np.pi else current_lobe.append(angles[i]-2*np.pi)
+		elif(In and (m-p[i])<=constants.beam_threshold):
+			current_lobe.append(angles[i]) if angles[i]<=np.pi else current_lobe.append(angles[i]-2*np.pi)
 		else:
-			continue
+			In=False
+			results.append(np.mean(current_lobe)) if current_lobe else None
+			current_lobe = []
 	return results

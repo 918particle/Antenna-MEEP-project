@@ -12,5 +12,4 @@ class RF_array:
 				constants.dx,
 				constants.n_slices)
 			current_antenna.create(constants.x0,y,geometry)
-			current_antenna.add_source(constants.frequency,constants.phase,sources)
-			constants.phase+=constants.d_phase
+			current_antenna.add_source(constants.frequency,constants.phase+j*constants.d_phase,sources)
