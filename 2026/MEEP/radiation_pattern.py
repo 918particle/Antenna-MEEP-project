@@ -18,33 +18,40 @@ def calculate_radiation_pattern(simulation,n2f_objs):
 		Pz = np.real(E[:,0]*H[:,1]-E[:,1]*H[:,0])
 		Pr = np.sqrt(np.square(Px)+np.square(Py)+np.square(Pz))
 		directivity = 10.0*np.log10(Pr/constants.normalization)
-		results.append((angles,directivity))
+		results.append((angles,directivity,"data"))
 	return results
 def calculate_theoretical_radiation_pattern(phi_0,frequency):
-	results = []
+	directivity = []
 	angles = 2*np.pi/constants.npts*np.arange(constants.npts)
 	for theta in angles:
-		if(theta!=0.0):
-			pr_th_num = np.sin(constants.n_antenna*np.pi*constants.d_y*frequency*(np.sin(theta)-np.sin(phi_0*np.pi/180)))
-			pr_th_den = np.sin(1.0*np.pi*constants.d_y*frequency*(np.sin(theta)-np.sin(phi_0*np.pi/180)))
-			results.append(pr_th_num*pr_th_num/pr_th_den/pr_th_den/constants.n_antenna/constants.n_antenna)
+		if(theta==0.0 and phi_0==0.0):
+			directivity.append(1.0)
 		else:
-			results.append(1.0/constants.n_antenna/constants.n_antenna)
-	results = 10.0*np.log10(results)-10.0*np.log10(constants.theory_normalization)
-	return (angles,results)
-def locate_beams(angles,p):
+			pr_th_num = np.sin(constants.n_antenna*np.pi*constants.d_y*frequency*(np.sin(theta)-np.sin(phi_0)))
+			pr_th_den = np.sin(1.0*np.pi*constants.d_y*frequency*(np.sin(theta)-np.sin(phi_0)))
+			directivity.append(pr_th_num*pr_th_num/pr_th_den/pr_th_den/constants.n_antenna/constants.n_antenna)
+	directivity = 10.0*np.log10(directivity)-10.0*np.log10(constants.theory_normalization)
+	return [(angles,directivity,"theory")]
+def locate_beams(rad_patterns):
 	results = []
 	current_lobe = []
+	current_power = []
 	In = False
-	m = np.max(p)
-	for i in range(1,constants.npts):
-		if(not In and (m-p[i])<=constants.beam_threshold and (m-p[i-1])>=constants.beam_threshold):
-			In = True
-			current_lobe.append(angles[i]) if angles[i]<=np.pi else current_lobe.append(angles[i]-2*np.pi)
-		elif(In and (m-p[i])<=constants.beam_threshold):
-			current_lobe.append(angles[i]) if angles[i]<=np.pi else current_lobe.append(angles[i]-2*np.pi)
-		else:
-			In=False
-			results.append(np.mean(current_lobe)) if current_lobe else None
-			current_lobe = []
+	for pattern in rad_patterns:
+		angles = pattern[0]
+		p = pattern[1]
+		m = np.max(p)
+		for i in range(1,constants.npts):
+			if(not In and (m-p[i])<=constants.beam_threshold and (m-p[i-1])>=constants.beam_threshold):
+				In = True
+				current_lobe.append(angles[i]) if angles[i]<=np.pi else current_lobe.append(angles[i]-2*np.pi)
+				current_power.append(p[i])
+			elif(In and (m-p[i])<=constants.beam_threshold):
+				current_lobe.append(angles[i]) if angles[i]<=np.pi else current_lobe.append(angles[i]-2*np.pi)
+				current_power.append(p[i])
+			else:
+				In=False
+				results.append((np.mean(current_lobe),np.max(current_power))) if current_lobe else None
+				current_lobe = []
+				current_power = []
 	return results

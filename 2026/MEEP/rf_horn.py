@@ -46,8 +46,9 @@ class RF_horn:
 		a = np.zeros((N,1))
 		b = np.zeros((N,1))
 		a[0] = 1
-		a[3] = 1
-		a[7] = 1
+		a[2] = 1
+		a[5] = 1
+		a[8] = 1
 		omega = 2.0*np.pi*frequency
 		return lambda t: np.sum([a[n]*np.sin((n+1)*omega*t-phase)+b[n]*np.cos((n+1)*omega*t-phase) for n in range(N)],axis=0)
 	def add_source(self,frequency,phase,sources):
