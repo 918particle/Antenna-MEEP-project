@@ -21,7 +21,7 @@ sim = mp.Simulation(
 	resolution=constants.resolution)
 
 #Add Near 2 Far projection regions
-frequencies = np.array([1,9])*constants.frequency
+frequencies = np.array([constants.frequency_1,constants.frequency_2])
 region = Near2Far_Region(constants.n2f_x_size,constants.n2f_y_size,frequencies)
 region_objs = region.create(sim)
 
@@ -35,11 +35,12 @@ sim.run(until=100)
 
 #Compute radiation patterns
 results = radiation_pattern.calculate_radiation_pattern(sim,region_objs)
-theory_results = radiation_pattern.calculate_theoretical_radiation_pattern(0.0,1*constants.frequency)
+#theory_results = radiation_pattern.calculate_theoretical_radiation_pattern(0.0,1*constants.frequency_1)
 
 #Beamwidth analysis
 beams = radiation_pattern.locate_beams(results)
 #print(beams)
 
 #Graph radiation patterns
-graph_patterns.plot_radiation_patterns(theory_results+results,"rad_pattern.png",beam_loc=beams)
+#graph_patterns.plot_radiation_patterns(theory_results+results,"rad_pattern.png",beam_loc=beams)
+graph_patterns.plot_radiation_patterns(results,"rad_pattern.png",beam_loc=beams)

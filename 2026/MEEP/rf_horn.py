@@ -41,16 +41,9 @@ class RF_horn:
 			edge_lower = mp.Vector3(i*self.dx+self.box_size+x,-k_1*np.exp(k_2*(i*self.dx))+y)
 			geometry.append(mp.Block(edge_size,center=edge_upper,material=mp.metal))
 			geometry.append(mp.Block(edge_size,center=edge_lower,material=mp.metal))
-	def source_function(self,frequency,phase): #Have to move away from Fourier series.  Can two sources occupy the same space?
-		N = 4
-		a = np.zeros((N,1))
-		b = np.zeros((N,1))
-		a[0] = 1
-		a[2] = 1
-		a[5] = 1
-		a[8] = 1
+	def source_function(self,frequency,phase):
 		omega = 2.0*np.pi*frequency
-		return lambda t: np.sum([a[n]*np.sin((n+1)*omega*t-phases)+b[n]*np.cos((n+1)*omega*t-phases) for n in range(N)],axis=0)
+		return lambda t: np.sin(omega*t-phase)
 	def add_source(self,frequency,phase,sources):
 		sources.append(
 			mp.Source(
