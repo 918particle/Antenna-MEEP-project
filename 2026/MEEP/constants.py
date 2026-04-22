@@ -24,6 +24,5 @@ n2f_y_size = 134
 npts = 1080
 r = 1000
 normalization = 0.003
-#normalization = 0.001
 theory_normalization = 1.0
 beam_threshold = 10.0
