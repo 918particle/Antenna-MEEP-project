@@ -11,3 +11,4 @@ class RF_array:
 			current_antenna.add_source(c.frequency_2,c.phase+j*c.d_phase_2,sources)
 			current_antenna.add_source(c.frequency_3,c.phase+j*c.d_phase_3,sources)
 			current_antenna.add_source(c.frequency_4,c.phase+j*c.d_phase_4,sources)
+			current_antenna.add_source(c.frequency_5,c.phase+j*c.d_phase_5,sources)
