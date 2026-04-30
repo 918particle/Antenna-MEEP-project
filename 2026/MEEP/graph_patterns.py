@@ -20,3 +20,4 @@ def plot_radiation_patterns(results,file_title,beam_loc=None):
 	ax.grid(True)
 	ax.tick_params(labelsize=18)
 	plt.savefig(file_title)
+	plt.close()

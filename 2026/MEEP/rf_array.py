@@ -8,5 +8,4 @@ class RF_array:
 			current_antenna = RF_horn(c.box_size,c.antenna_length,4.0*c.box_size,c.dx,c.n_slices)
 			current_antenna.create(c.x0,y,geometry)
 			current_antenna.add_source(c.base_frequency,c.phase+j*c.d_phase,sources)
-			#current_antenna.add_source(sweep_frequency,c.phase,sources)
-			#current_antenna.add_source(c.frequency_3,c.phase+j*c.d_phase_3,sources)
+			current_antenna.add_source(sweep_frequency,c.phase,sources)

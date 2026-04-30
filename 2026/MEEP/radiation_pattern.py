@@ -17,7 +17,7 @@ def calculate_radiation_pattern(simulation,n2f_objs):
 		Py = np.real(E[:,2]*H[:,0]-E[:,0]*H[:,2])
 		Pz = np.real(E[:,0]*H[:,1]-E[:,1]*H[:,0])
 		Pr = np.sqrt(np.square(Px)+np.square(Py)+np.square(Pz))
-		directivity = 10.0*np.log10(Pr/constants.normalization)
+		directivity = 10.0*np.log10(Pr)-10.0*np.log10(constants.normalization)
 		results.append((angles,directivity,"data"))
 	return results
 def calculate_theoretical_radiation_pattern(phi_0,frequency):
@@ -30,7 +30,7 @@ def calculate_theoretical_radiation_pattern(phi_0,frequency):
 			pr_th_num = np.sin(constants.n_antenna*np.pi*constants.d_y*frequency*(np.sin(theta)-np.sin(phi_0)))
 			pr_th_den = np.sin(1.0*np.pi*constants.d_y*frequency*(np.sin(theta)-np.sin(phi_0)))
 			directivity.append(pr_th_num*pr_th_num/pr_th_den/pr_th_den/constants.n_antenna/constants.n_antenna)
-	directivity = 10.0*np.log10(directivity)-10.0*np.log10(constants.theory_normalization)
+	directivity = 10.0*np.log10(directivity)
 	return [(angles,directivity,"theory")]
 def locate_beams(rad_patterns):
 	results = []
