@@ -1,7 +1,7 @@
 import meep as mp
 import numpy as np
 import matplotlib.pyplot as plt
-import old_stuff.utility as utility
+import utility as utility
 
 example = utility.rf_horn(1,1,1,1,1,1)
 

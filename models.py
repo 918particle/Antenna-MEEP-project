@@ -1,10 +1,11 @@
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum, auto
 from pathlib import Path
 
 import numpy as np
-from numpy.typing import NDArray
 import pandas as pd
+from numpy.typing import NDArray
 
 
 class Plane(StrEnum):
@@ -57,20 +58,36 @@ class GDSIIFileConfigHorn:
 
 
 @dataclass
-class RFHornConfig:
-    """Configuration for an RF Horn. Units are in Meep units.
+class AntennaConfig:
+    """Configuration for an antenna. Units are in Meep units.
 
     Attributes:
-        gdsii_file_config (GDSIIFileConfigHorn): Config for GDSII file of RF Horn.
+        gdsii_file_config (GDSIIFileConfigHorn): Config for GDSII file of antenna.
         xy_thickness (float): Thickness in direction of xy plane. Defaults to 1.0.
         z_thickness (float): Thickness in direction of z plane. Defaults to 0.0.
         dpml (float): Thickness of perfectly matched layer (PML). Defaults to 1.0.
     """
-
+    # TODO: when new antenna types are added, add other GDSII file config types to typehint
     gdsii_file_config: GDSIIFileConfigHorn
     xy_thickness: float = 1.0
     z_thickness: float = 0.0
     dpml: float = 1
+
+
+@dataclass
+class SourceConfig:
+    """Configuration for a source. Broken up into a base and sweep frequency to mimic lab setup. Units are in Meep units.
+
+    Attributes:
+        sweep_frequency (float): The frequency as part of a frequency sweep.
+        base_frequency (float): Base frequency, remains constant. Defaults to 0.1.
+        phase (float): The phase of the sweep frequency and first antenna's base frequency.
+        d_phase(float): The scalar difference in phase between each antenna's base frequency.
+    """
+    sweep_frequency: float
+    base_frequency: float = 0.1
+    phase: float = 0.0
+    phase_offset: float = 1.5
 
 
 @dataclass
@@ -120,14 +137,14 @@ class AnalysisConfig:
     """Configuration for analysis. Units are in Meep units.
 
     Attributes:
-        rf_horn_config (RFHornConfig): Config of antenna to analyze.
+        rf_horn_config (AntennaConfig): Config of antenna to analyze.
         num_antenna (int): Number of antennas in array.
         resolution (int): Number of pixels per distance unit.
         dimensionality (Dimensionality): Number of dimensions to analyze.
         analysis_type_config (RadPatternAnalysisConfig | VSWRAnalysisConfig): Config for type of analysis to perform.
     """
 
-    rf_horn_config: RFHornConfig
+    rf_horn_config: AntennaConfig
     num_antenna: int
     resolution: int
     dimensionality: Dimensionality

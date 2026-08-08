@@ -1,8 +1,8 @@
 import meep as mp
 import numpy as np
-import old_stuff.utility as utility
+import utility as utility
 
-gdsII_file = 'test.gds'
+gdsII_file = 'old_stuff/test.gds'
 HORN_LAYER = 2
 COND_LAYER = 5
 DIEL_LAYER = 6

@@ -1,4 +1,4 @@
-from rf_horn import RF_horn
+from old_rf_horn import RF_horn
 import constants as c
 
 class RF_array:
