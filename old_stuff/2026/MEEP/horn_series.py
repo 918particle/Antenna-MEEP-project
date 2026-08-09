@@ -2,7 +2,7 @@ import os
 import meep as mp
 import numpy as np
 import matplotlib.pyplot as plt
-from rf_horn import RF_horn
+from old_rf_horn import RF_horn
 from rf_array import RF_array
 from near2far_region import Near2Far_Region
 import radiation_pattern

@@ -23,6 +23,10 @@ class AnalysisType(StrEnum):
     VSWR = auto()
 
 
+class AntennaType(StrEnum):
+    RF_HORN = auto()
+
+
 @dataclass
 class GDSIIFileConfigHorn:
     """Configuration for a GDSII file for an RF horn.
@@ -62,32 +66,27 @@ class AntennaConfig:
     """Configuration for an antenna. Units are in Meep units.
 
     Attributes:
+        antenna_type (AntennaType): Type of antenna. Currently just RF Horn but options will be added at a later time.
         gdsii_file_config (GDSIIFileConfigHorn): Config for GDSII file of antenna.
         xy_thickness (float): Thickness in direction of xy plane. Defaults to 1.0.
         z_thickness (float): Thickness in direction of z plane. Defaults to 0.0.
-        dpml (float): Thickness of perfectly matched layer (PML). Defaults to 1.0.
     """
+
+    antenna_type: AntennaType
     # TODO: when new antenna types are added, add other GDSII file config types to typehint
     gdsii_file_config: GDSIIFileConfigHorn
     xy_thickness: float = 1.0
     z_thickness: float = 0.0
-    dpml: float = 1
 
-
-@dataclass
-class SourceConfig:
-    """Configuration for a source. Broken up into a base and sweep frequency to mimic lab setup. Units are in Meep units.
-
-    Attributes:
-        sweep_frequency (float): The frequency as part of a frequency sweep.
-        base_frequency (float): Base frequency, remains constant. Defaults to 0.1.
-        phase (float): The phase of the sweep frequency and first antenna's base frequency.
-        d_phase(float): The scalar difference in phase between each antenna's base frequency.
-    """
-    sweep_frequency: float
-    base_frequency: float = 0.1
-    phase: float = 0.0
-    phase_offset: float = 1.5
+    def __post_init__(self):
+        if self.antenna_type == AntennaType.RF_HORN:
+            if not isinstance(self.gdsii_file_config, GDSIIFileConfigHorn):
+                raise TypeError(
+                    "RF Horn antenna type must have type GDSIIFileConfigHorn for gdsii_file_config"
+                )
+        # TODO: when new antenna types are added, add file config agreement checks
+        else:
+            pass
 
 
 @dataclass
@@ -99,16 +98,21 @@ class RadPatternAnalysisConfig:
         steering_beam_base_frequency (float):
         sweep_start (float): Frequency to start the sweep.
         sweep_end (float): Frequency to end the sweep.
+        phase (float): The phase of the sweep frequency and first antenna's base frequency.
         df (float): Frequency steps to take during sweep between sweep_start and sweep_end.
         plane (Plane): Plane for analysis.
+        d_phase(float): The scalar difference in phase between each antenna's base frequency. Defaults to 1.5.
     """
 
     source_frequency: float
     steering_beam_base_frequency: float
     sweep_start: float
     sweep_end: float
-    df: float
+    phase: float = 0.0
+    d_f: float
     plane: Plane
+    d_phase: float = 1.5
+
     analysis_type: AnalysisType = field(init=False)
 
     def __post_init__(self):
@@ -137,22 +141,38 @@ class AnalysisConfig:
     """Configuration for analysis. Units are in Meep units.
 
     Attributes:
-        rf_horn_config (AntennaConfig): Config of antenna to analyze.
+        antenna_config (AntennaConfig): Config of antenna to analyze.
         num_antenna (int): Number of antennas in array.
         resolution (int): Number of pixels per distance unit.
         dimensionality (Dimensionality): Number of dimensions to analyze.
+        x_offset (float): The offset in the x direction between antenna. Defaults to 0.0.
+        y_offset (float): The offset in the y direction between antenna. Defaults to 0.0.
+        dpml (float): Thickness of perfectly matched layer (PML). Defaults to 1.0.
         analysis_type_config (RadPatternAnalysisConfig | VSWRAnalysisConfig): Config for type of analysis to perform.
     """
 
-    rf_horn_config: AntennaConfig
+    antenna_config: AntennaConfig
     num_antenna: int
     resolution: int
     dimensionality: Dimensionality
     analysis_type_config: RadPatternAnalysisConfig | VSWRAnalysisConfig
+    x_offset: float = 0.0
+    y_offset: float = 0.0
+    dpml: float = 1.0
     analysis_type: AnalysisType = field(init=False)
 
     def __post_init__(self):
         self.analysis_type = self.analysis_type_config.analysis_type
+
+
+@dataclass
+class Near2FarDimensions:
+    x_size: float
+    y_size: float
+    x_center: float
+    y_center: float
+    z_size: float | None = None
+    z_center: float | None = None
 
 
 @dataclass

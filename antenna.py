@@ -1,52 +1,91 @@
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 
 import meep as mp
 import numpy as np
 
-from models import AnalysisType, AntennaConfig, Dimensionality, SourceConfig
+from models import AnalysisConfig, AnalysisType, Dimensionality
 
 
-class Antenna:
-    def __init__(self, antenna_config: AntennaConfig, source_config: SourceConfig):
-        self.antenna_config = antenna_config
-        self.source_config = source_config
+class Antenna(ABC):
+    def __init__(self, analysis_config: AnalysisConfig):
+        self.antenna_config = analysis_config.antenna_config
+        self.analysis_type_config = analysis_config.analysis_type_config
         self._file_config = self.antenna_config.gdsii_file_config
+        self.dimensionality: Dimensionality = analysis_config.dimensionality
 
-        self.dimensionality: Dimensionality | None = None
         self.geometry: list[mp.GeometricObject] | None = None
         self.base_source: mp.Source | None = None
+        self.sweep_source: mp.Source | None = None
+        self.pulse_source: mp.Source | None = None
+        self.sources: list[mp.Source] | None = None
 
     def _shift_antenna(self, x_offset: float = 0.0, y_offset: float = 0.0) -> None:
         for obj in self.geometry:
             obj = obj.shift(mp.Vector3(x_offset, y_offset, 0))
 
-    def _rad_pattern_source_function(
-        self, frequency, phase
+    def _continuous_wave_source(
+        self, frequency: float, phase: float
     ) -> Callable[[float], float]:
         omega = 2.0 * np.pi * frequency
         return lambda t: np.sin(omega * t + phase * np.pi / 180.0)
 
-    def _set_geometry_rad_pattern(self) -> None:
-        raise NotImplementedError(
-            "Child function did not implement _set_geometry_rad_pattern"
-        )
+    def _pulse_source(sigma: float, mu: float) -> Callable[[float], float]:
+        return lambda t: np.exp(-0.5 * (t - mu) * (t - mu) / sigma / sigma)
 
+    @abstractmethod
+    def _set_geometry_rad_pattern(self) -> None:
+        pass
+
+    @abstractmethod
     def _set_geometry_vswr(self) -> None:
-        raise NotImplementedError("Child function did not implement _set_geometry_vswr")
+        pass
 
     def set_geometry(
         self,
-        dimensionality: Dimensionality,
-        analysis_type: AnalysisType,
         x_offset: float = 0.0,
         y_offset: float = 0.0,
     ) -> None:
-        self.dimensionality = dimensionality
         self.geometry = []
 
-        if analysis_type == AnalysisType.RAD_PATTERN:
+        if self.analysis_type_config.analysis_type == AnalysisType.RAD_PATTERN:
             self._set_geometry_rad_pattern()
-        else:
+        elif self.analysis_type_config.analysis_type == AnalysisType.VSWR:
             self._set_geometry_vswr()
 
         self._shift_antenna(x_offset=x_offset, y_offset=y_offset)
+
+    @abstractmethod
+    def _set_source_rad_pattern(
+        self,
+        frequency: float,
+        base_phase_offset: float,
+        x_offset: float = 0.0,
+        y_offset: float = 0.0,
+    ):
+        pass
+
+    @abstractmethod
+    def _set_source_vswr(
+        self,
+        x_offset: float = 0.0,
+        y_offset: float = 0.0,
+    ):
+        pass
+
+    def set_source(
+        self,
+        x_offset: float = 0.0,
+        y_offset: float = 0.0,
+        frequency: float | None = None,
+        base_phase_offset: float | None = None,
+    ):
+        if self.analysis_type_config.analysis_type == AnalysisType.RAD_PATTERN:
+            self._set_source_rad_pattern(
+                x_offset=x_offset,
+                y_offset=y_offset,
+                frequency=frequency,
+                base_phase_offset=base_phase_offset,
+            )
+        elif self.analysis_type_config.analysis_type == AnalysisType.VSWR:
+            self._set_source_vswr(x_offset=x_offset, y_offset=y_offset)
