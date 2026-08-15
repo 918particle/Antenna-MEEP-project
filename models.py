@@ -1,4 +1,3 @@
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum, auto
 from pathlib import Path
@@ -175,23 +174,9 @@ class Near2FarDimensions:
     z_center: float | None = None
 
 
-@dataclass
-class RadPatternResult:
-    """Result of a run of radiation pattern analysis for a singular frequency.
-
-    Attributes:
-        frequency (float): Frequency of the run that produced this result. Units: Meep units.
-        angles (NDArray[np.float32]): Angles analyzed. 1D array. Units: Radians.
-        directivity (NDArray[np.float64]): Directivity expressed in decibles. 1D array. Units: dBi.
-    """
-
-    frequency: float
-    angles: NDArray[np.float32]
-    directivity: NDArray[np.float64]
-
 
 @dataclass
-class RadPatternAllResults:
+class RadPatternResults:
     """_summary_
 
     Attributes:
@@ -204,5 +189,6 @@ class RadPatternAllResults:
 
     frequencies: NDArray[np.float32]
     angles: NDArray[np.float32]
-    directivity: NDArray[np.float64]
+    base_directivity: NDArray[np.float64]
+    sweep_directivity: NDArray[np.float64]
     df: pd.DataFrame

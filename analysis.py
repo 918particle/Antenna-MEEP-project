@@ -4,7 +4,7 @@ from pathlib import Path
 import meep as mp
 
 from antenna import Antenna
-from models import AnalysisConfig, AnalysisType, AntennaType, Dimensionality
+from models import AnalysisConfig, AntennaType, Dimensionality
 from rf_horn import RFHorn
 
 ANTENNA_CLASSES = {AntennaType.RF_HORN: RFHorn}
@@ -45,11 +45,11 @@ class Analysis(ABC):
             self.geometry.extend(antenna.geometry)
 
     @abstractmethod
-    def _get_sources(self, frequency: float) -> list[mp.Source]:
+    def _get_sources(self, frequency: float | None = None) -> list[mp.Source]:
         pass
 
-    def setup_sim(self) -> mp.Simulation:
-        sources = self._get_sources()
+    def setup_sim(self, frequency: float | None = None) -> mp.Simulation:
+        sources = self._get_sources(frequency=frequency)
 
         if self.analysis_config.dimensionality == Dimensionality.TWO_DIMENSIONAL:
             cell_size = mp.Vector3(60, 60, 0)

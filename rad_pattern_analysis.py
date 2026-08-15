@@ -1,8 +1,33 @@
+from dataclasses import dataclass
+
 import meep as mp
 import numpy as np
+import pandas as pd
+from numpy.typing import NDArray
 
 from analysis import Analysis
-from models import AnalysisConfig, Dimensionality, Near2FarDimensions
+from models import (
+    AnalysisConfig,
+    Dimensionality,
+    Near2FarDimensions,
+    Plane,
+    RadPatternResults,
+)
+
+
+@dataclass
+class Result:
+    """Result of a run of radiation pattern analysis for a singular frequency.
+
+    Attributes:
+        frequency (float): Frequency of the run that produced this result. Units: Meep units.
+        angles (NDArray[np.float32]): Angles analyzed. 1D array. Units: Radians.
+        directivity (NDArray[np.float64]): Directivity expressed in decibles. 1D array. Units: dBi.
+    """
+
+    frequency: float
+    angles: NDArray[np.float32]
+    directivity: NDArray[np.float64]
 
 
 class RadPatternAnalysis(Analysis):
@@ -10,7 +35,7 @@ class RadPatternAnalysis(Analysis):
         super().__init__(
             analysis_config=analysis_config, output_file_base_name=output_file_base_name
         )
-        self.projection_box: mp.DftNear2Far | None = None
+        self.results: RadPatternResults | None = None
 
     def _get_near2far_dimensions(self) -> Near2FarDimensions:
         x_coords = [vertex.x for prism in self.geometry for vertex in prism.vertices]
@@ -36,7 +61,7 @@ class RadPatternAnalysis(Analysis):
 
         return dims
 
-    def _get_projection_box(
+    def _get_near2far_region(
         self, sim: mp.Simulation, frequency: float
     ) -> mp.Near2FarRegion:
         dims = self._get_near2far_dimensions()
@@ -113,6 +138,59 @@ class RadPatternAnalysis(Analysis):
             sources.extend(antenna.sources)
         return sources
 
+    def _calculate_radiation_pattern(
+        self,
+        frequency: float,
+        sim: mp.Simulation,
+        near2far_region: mp.DftNear2Far,
+    ) -> Result:
+        if self.analysis_type_config.plane == Plane.E_PLANE:
+            npts = 360
+        elif self.analysis_type_config.plane == Plane.H_PLANE:
+            npts = 180
+        r = 1000
+        angles = 2 * np.pi / npts * np.arange(npts)
+        E = np.zeros((npts, 3), dtype=np.complex128)
+        H = np.zeros((npts, 3), dtype=np.complex128)
+        for n in range(npts):
+            ff = sim.get_farfield(
+                near2far=near2far_region,
+                x=mp.Vector3(r * np.cos(angles[n]), r * np.sin(angles[n])),
+            )
+            E[n, :] = [np.conj(ff[j]) for j in range(3)]
+            H[n, :] = [ff[j + 3] for j in range(3)]
+        Px = np.real(E[:, 1] * H[:, 2] - E[:, 2] * H[:, 1])
+        Py = np.real(E[:, 2] * H[:, 0] - E[:, 0] * H[:, 2])
+        Pz = np.real(E[:, 0] * H[:, 1] - E[:, 1] * H[:, 0])
+        Pr = np.sqrt(np.square(Px) + np.square(Py) + np.square(Pz))
+        directivity = 10.0 * np.log10(Pr / max(Pr))
+
+        return Result(frequency=frequency, angles=angles, directivity=directivity)
+
+    def _aggregate_results(
+        base_results: list[Result], sweep_results: list[Result]
+    ) -> RadPatternResults:
+        frequencies = np.array([result.frequency for result in base_results])
+        angles = base_results[0].angles
+        base_directivity = np.stack([result.directivity for result in base_results])
+        sweep_directivity = np.stack([result.directivity for result in sweep_results])
+
+        df = pd.DataFrame(
+            {
+                "frequency": np.repeat(frequencies, len(angles)),
+                "angle": np.tile(angles, len(frequencies)),
+                "base_directivity": base_directivity.ravel(),
+                "sweep_directivity": sweep_directivity.ravel(),
+            }
+        )
+        return RadPatternResults(
+            frequencies=frequencies,
+            angles=angles,
+            base_directivity=base_directivity,
+            sweep_directivity=sweep_directivity,
+            df=df,
+        )
+
     def run_sim(self):
         self._create_antennas()
         frequencies = np.arange(
@@ -120,8 +198,34 @@ class RadPatternAnalysis(Analysis):
             self.analysis_type_config.sweep_end,
             self.analysis_type_config.d_f,
         )
+        base_results = []
+        sweep_results = []
         for frequency in frequencies:
-            sim = self.setup_sim()
-            projection_box = self._get_projection_box(
+            sim = self.setup_sim(frequency=frequency)
+            base_n2f_region = self._get_near2far_region(
+                self,
+                sim=sim,
+                frequency=self.analysis_type_config.steering_beam_base_frequency,
+            )
+            sweep_n2f_region = self._get_near2far_region(
                 self, sim=sim, frequency=frequency
             )
+            sim.run(until=100)
+            base_results.extend(
+                self._calculate_radiation_pattern(
+                    frequency=frequency,
+                    sim=sim,
+                    near2far_region=base_n2f_region,
+                )
+            )
+            sweep_results.extend(
+                self._calculate_radiation_pattern(
+                    frequency=frequency,
+                    sim=sim,
+                    near2far_region=sweep_n2f_region,
+                )
+            )
+            sim.reset_meep()
+        self.results = self._aggregate_results(
+            base_results=base_results, sweep_results=sweep_results
+        )
