@@ -9,63 +9,63 @@ class RFHorn(Antenna):
         super().__init__(analysis_config=analysis_config)
 
     def _set_geometry_rad_pattern(self) -> None:
-        sides = mp.set_GDSII_prisms(
+        sides = mp.get_GDSII_prisms(
             material=mp.metal,
-            gdsii_filename=self._file_config.file_path,
-            layer=self._file_config.horn_sides_layer,
+            GDSIIFile=str(self._file_config.file_path),
+            Layer=self._file_config.horn_sides_layer,
             zmin=-self.antenna_config.z_thickness,
             zmax=self.antenna_config.z_thickness,
         )
         self.geometry.extend(sides)
-        back = mp.set_GDSII_prisms(
+        back = mp.get_GDSII_prisms(
             material=mp.metal,
-            gdsii_filename=self._file_config.file_path,
-            layer=self._file_config.back_plug_layer,
+            GDSIIFile=str(self._file_config.file_path),
+            Layer=self._file_config.back_plug_layer,
             zmin=-self.antenna_config.z_thickness,
             zmax=self.antenna_config.z_thickness,
         )
         self.geometry.extend(back)
 
         if self.dimensionality == Dimensionality.THREE_DIMENSIONAL:
-            bottom = mp.set_GDSII_prisms(
+            bottom = mp.get_GDSII_prisms(
                 material=mp.metal,
-                gdsii_filename=self._file_config.file_path,
-                layer=self._file_config.horn_top_layer,
+                GDSIIFile=str(self._file_config.file_path),
+                Layer=self._file_config.horn_top_layer,
                 zmin=-self.antenna_config.z_thickness,
                 zmax=-self.antenna_config.z_thickness
                 + self.antenna_config.xy_thickness,
             )
             self.geometry.extend(bottom)
-            top = mp.set_GDSII_prisms(
+            top = mp.get_GDSII_prisms(
                 material=mp.metal,
-                gdsii_filename=self._file_config.file_path,
-                layer=self._file_config.horn_top_layer,
+                GDSIIFile=str(self._file_config.file_path),
+                Layer=self._file_config.horn_top_layer,
                 zmin=self.antenna_config.z_thickness - self.antenna_config.xy_thickness,
                 zmax=self.antenna_config.z_thickness,
             )
             self.geometry.extend(top)
 
     def _set_geometry_vswr(self) -> None:
-        sides = mp.set_GDSII_prisms(
+        sides = mp.get_GDSII_prisms(
             material=mp.metal,
-            gdsii_filename=self._file_config.file_path,
-            layer=self._file_config.horn_sides_layer,
+            GDSIIFile=str(self._file_config.file_path),
+            Layer=self._file_config.horn_sides_layer,
             zmin=-self.antenna_config.z_thickness,
             zmax=self.antenna_config.z_thickness,
         )
         self.geometry.extend(sides)
-        conductors = mp.set_GDSII_prisms(
+        conductors = mp.get_GDSII_prisms(
             material=mp.metal,
-            gdsii_filename=self._file_config.file_path,
-            layer=self._file_config.conductive_layer,
+            GDSIIFile=str(self._file_config.file_path),
+            Layer=self._file_config.conductive_layer,
             zmin=-self.antenna_config.z_thickness,
             zmax=self.antenna_config.z_thickness,
         )
         self.geometry.extend(conductors)
-        dielectric = mp.set_GDSII_prisms(
+        dielectric = mp.get_GDSII_prisms(
             material=mp.Medium(epsilon=2),
-            gdsii_filename=self._file_config.file_path,
-            layer=self._file_config.dielectric_layer,
+            GDSIIFile=str(self._file_config.file_path),
+            Layer=self._file_config.dielectric_layer,
             zmin=-self.antenna_config.z_thickness,
             zmax=self.antenna_config.z_thickness,
         )
@@ -79,7 +79,7 @@ class RFHorn(Antenna):
         y_offset: float = 0.0,
     ):
         src_vol = mp.GDSII_vol(
-            fname=self._file_config.file_path,
+            fname=str(self._file_config.file_path),
             layer=self._file_config.source_layer,
             zmin=-self.antenna_config.xy_thickness / 2,
             zmax=self.antenna_config.xy_thickness / 2,

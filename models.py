@@ -53,11 +53,15 @@ class GDSIIFileConfigHorn:
 
     def __post_init__(self):
         self.file_path = Path(self.file_path)
+        if not self.file_path.suffix:
+            self.file_path = self.file_path.with_suffix(".gds")
 
         if not self.file_path.exists():
-            raise FileNotFoundError(
-                f"The provided path for GDSII file does not exist: {self.file_path}"
-            )
+            self.file_path = Path("gdsii_files") / self.file_path
+            if not self.file_path.exists():
+                raise FileNotFoundError(
+                    f"The provided path for GDSII file does not exist: {self.file_path}"
+                )
 
 
 @dataclass
@@ -74,8 +78,8 @@ class AntennaConfig:
     antenna_type: AntennaType
     # TODO: when new antenna types are added, add other GDSII file config types to typehint
     gdsii_file_config: GDSIIFileConfigHorn
-    xy_thickness: float = 1.0
-    z_thickness: float = 0.0
+    xy_thickness: float = 0.5
+    z_thickness: float = 1.0
 
     def __post_init__(self):
         if self.antenna_type == AntennaType.RF_HORN:
@@ -93,7 +97,6 @@ class RadPatternAnalysisConfig:
     """Configuration for radiation pattern analysis. Units are in Meep units.
 
     Attributes:
-        source_frequency (float):
         steering_beam_base_frequency (float):
         sweep_start (float): Frequency to start the sweep.
         sweep_end (float): Frequency to end the sweep.
@@ -103,13 +106,12 @@ class RadPatternAnalysisConfig:
         d_phase(float): The scalar difference in phase between each antenna's base frequency. Defaults to 1.5.
     """
 
-    source_frequency: float
     steering_beam_base_frequency: float
     sweep_start: float
     sweep_end: float
-    phase: float = 0.0
     d_f: float
-    plane: Plane
+    phase: float = 0.0
+    plane: Plane = Plane.E_PLANE
     d_phase: float = 1.5
 
     analysis_type: AnalysisType = field(init=False)
@@ -172,7 +174,6 @@ class Near2FarDimensions:
     y_center: float
     z_size: float | None = None
     z_center: float | None = None
-
 
 
 @dataclass

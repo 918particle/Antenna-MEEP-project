@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 import meep as mp
 import numpy as np
@@ -13,6 +14,9 @@ from models import (
     Plane,
     RadPatternResults,
 )
+from utilities import plot_radiation_pattern
+
+N2F_BOX_MARGIN = 1
 
 
 @dataclass
@@ -31,10 +35,8 @@ class Result:
 
 
 class RadPatternAnalysis(Analysis):
-    def __init__(self, analysis_config: AnalysisConfig, output_file_base_name: str):
-        super().__init__(
-            analysis_config=analysis_config, output_file_base_name=output_file_base_name
-        )
+    def __init__(self, analysis_config: AnalysisConfig, output_folder: str):
+        super().__init__(analysis_config=analysis_config, output_folder=output_folder)
         self.results: RadPatternResults | None = None
 
     def _get_near2far_dimensions(self) -> Near2FarDimensions:
@@ -48,15 +50,15 @@ class RadPatternAnalysis(Analysis):
         y_max = max(y_coords)
 
         dims = Near2FarDimensions(
-            x_size=x_max - x_min,
-            y_size=y_max - y_min,
+            x_size=(x_max - x_min) + (2 * N2F_BOX_MARGIN),
+            y_size=(y_max - y_min) + (2 * N2F_BOX_MARGIN),
             x_center=(x_min + x_max) / 2,
             y_center=(y_min + y_max) / 2,
         )
         if self.analysis_config.dimensionality == Dimensionality.THREE_DIMENSIONAL:
             z_min = min(z_coords)
             z_max = max(z_coords)
-            dims.z_size = z_max - z_min
+            dims.z_size = (z_max - z_min) + (2 * N2F_BOX_MARGIN)
             dims.z_center = (z_min + z_max) / 2
 
         return dims
@@ -66,36 +68,33 @@ class RadPatternAnalysis(Analysis):
     ) -> mp.Near2FarRegion:
         dims = self._get_near2far_dimensions()
         if self.analysis_config.dimensionality == Dimensionality.TWO_DIMENSIONAL:
-            z_size = dims.y_size
-            z_center = 0.0
-        else:
-            z_size = dims.z_size
-            z_center = dims.z_center
+            dims.z_size = dims.y_size
+            dims.z_center = 0.0
 
         pos_y = mp.Near2FarRegion(
             center=mp.Vector3(
-                x=dims.x_center, y=dims.y_center + dims.y_size / 2, z=z_center
+                x=dims.x_center, y=dims.y_center + dims.y_size / 2, z=dims.z_center
             ),
-            size=mp.Vector3(x=dims.x_size, y=0, z=z_size),
+            size=mp.Vector3(x=dims.x_size, y=0, z=dims.z_size),
             weight=+1,
         )
         neg_y = mp.Near2FarRegion(
             center=mp.Vector3(
-                x=dims.x_center, y=dims.y_center - dims.y_size / 2, z=z_center
+                x=dims.x_center, y=dims.y_center - dims.y_size / 2, z=dims.z_center
             ),
             size=mp.Vector3(x=dims.x_size, y=0, z=dims.z_size),
             weight=-1,
         )
         pos_x = mp.Near2FarRegion(
             center=mp.Vector3(
-                x=dims.x_center + dims.x_size / 2, y=dims.y_center, z=z_center
+                x=dims.x_center + dims.x_size / 2, y=dims.y_center, z=dims.z_center
             ),
             size=mp.Vector3(x=0, y=dims.y_size, z=dims.z_size),
             weight=+1,
         )
         neg_x = mp.Near2FarRegion(
             center=mp.Vector3(
-                x=dims.x_center - dims.x_size / 2, y=dims.y_center, z=z_center
+                x=dims.x_center - dims.x_size / 2, y=dims.y_center, z=dims.z_center
             ),
             size=mp.Vector3(x=0, y=dims.y_size, z=dims.z_size),
             weight=-1,
@@ -168,7 +167,7 @@ class RadPatternAnalysis(Analysis):
         return Result(frequency=frequency, angles=angles, directivity=directivity)
 
     def _aggregate_results(
-        base_results: list[Result], sweep_results: list[Result]
+        self, base_results: list[Result], sweep_results: list[Result]
     ) -> RadPatternResults:
         frequencies = np.array([result.frequency for result in base_results])
         angles = base_results[0].angles
@@ -203,22 +202,19 @@ class RadPatternAnalysis(Analysis):
         for frequency in frequencies:
             sim = self.setup_sim(frequency=frequency)
             base_n2f_region = self._get_near2far_region(
-                self,
                 sim=sim,
                 frequency=self.analysis_type_config.steering_beam_base_frequency,
             )
-            sweep_n2f_region = self._get_near2far_region(
-                self, sim=sim, frequency=frequency
-            )
+            sweep_n2f_region = self._get_near2far_region(sim=sim, frequency=float(frequency))
             sim.run(until=100)
-            base_results.extend(
+            base_results.append(
                 self._calculate_radiation_pattern(
                     frequency=frequency,
                     sim=sim,
                     near2far_region=base_n2f_region,
                 )
             )
-            sweep_results.extend(
+            sweep_results.append(
                 self._calculate_radiation_pattern(
                     frequency=frequency,
                     sim=sim,
@@ -228,4 +224,12 @@ class RadPatternAnalysis(Analysis):
             sim.reset_meep()
         self.results = self._aggregate_results(
             base_results=base_results, sweep_results=sweep_results
+        )
+        self.results.df.to_csv(f"{self.output_folder}/results.csv")
+
+    def plot_results(self, lab_data_file: Path | str | None = None):
+        plot_radiation_pattern(
+            sim_results=self.results,
+            output_folder=self.output_folder,
+            lab_data_file=lab_data_file,
         )
