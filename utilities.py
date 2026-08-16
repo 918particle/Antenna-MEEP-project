@@ -86,7 +86,7 @@ def plot_radiation_pattern(
         ax.set_rlabel_position(180)
         ax.tick_params(labelsize=18)
         plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-        file_name = f"{output_folder}/rad_pattern_{frequency}"
+        file_name = Path(output_folder) / f"rad_pattern_{str(frequency).replace(".", "_")}"
         plt.savefig(file_name)
         plt.close()
 

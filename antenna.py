@@ -22,7 +22,8 @@ class Antenna(ABC):
 
     def _shift_antenna(self, x_offset: float = 0.0, y_offset: float = 0.0) -> None:
         for obj in self.geometry:
-            obj = obj.shift(mp.Vector3(x_offset, y_offset, 0))
+            obj.center += mp.Vector3(x_offset, y_offset, 0)
+            obj.vertices = [v + mp.Vector3(x_offset, y_offset, 0) for v in obj.vertices]
 
     def _continuous_wave_source(
         self, frequency: float, phase: float
