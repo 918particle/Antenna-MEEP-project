@@ -52,7 +52,7 @@ def resolve_output_folder(output_folder: Path | str) -> Path:
     output_folder = Path(output_folder).resolve()
     results_dir = (Path(__name__).parent / "results").resolve()
     if output_folder.is_relative_to(results_dir):
-        return results_dir
+        return output_folder
     return results_dir / output_folder.name
 
 
