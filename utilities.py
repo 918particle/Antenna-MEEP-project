@@ -8,8 +8,8 @@ import pandas as pd
 from models import RadPatternResults
 
 
-def _load_rad_results_from_csv(results_file: Path | str) -> RadPatternResults:
-    results_file = Path(results_file)
+def _load_sim_rad_results_from_csv(results_file: Path | str) -> RadPatternResults:
+    results_file = Path(results_file).resolve()
     if not results_file.suffix:
         results_file = results_file.with_suffix(".csv")
     if not results_file.exists():
@@ -63,7 +63,7 @@ def plot_radiation_pattern(
 ):
     output_folder = resolve_output_folder(output_folder)
     if not isinstance(sim_results, RadPatternResults):
-        sim_results = _load_rad_results_from_csv(sim_results)
+        sim_results = _load_sim_rad_results_from_csv(sim_results)
 
     for i, frequency in enumerate(sim_results.frequencies):
         fig = plt.figure(dpi=300)

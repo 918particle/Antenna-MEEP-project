@@ -1,10 +1,17 @@
+from pathlib import Path
+
 import configs.analysis_configs as ac
 from models import AnalysisType
 from rad_pattern_analysis import RadPatternAnalysis
+from utilities import plot_radiation_pattern
 
 # ====== INPUTS ======= 
+
 config = ac.ANALYSIS_CONFIG_1HORN_RAD_PATTERN
 output_folder = "analysis1"
+lab_data_file = None  # .dat file containing lab data to plot against. optional input, put None if ignoring
+use_existing_outputs = True  # True if using results from already ran simulation in output folder, False if want to rerun
+
 # ======================
 
 if config.analysis_type == AnalysisType.RAD_PATTERN:
@@ -12,5 +19,13 @@ if config.analysis_type == AnalysisType.RAD_PATTERN:
         analysis_config=config,
         output_folder=output_folder,
     )
-analysis.run_sim()
-analysis.plot_results()
+if not use_existing_outputs:
+    analysis.run_sim()
+    analysis.plot_results()
+else:
+    if config.analysis_type == AnalysisType.RAD_PATTERN:
+        plot_radiation_pattern(
+            sim_results=Path("results") / output_folder / "results.csv",
+            output_folder=output_folder,
+            lab_data_file=lab_data_file,
+        )
