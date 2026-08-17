@@ -66,12 +66,19 @@ def plot_radiation_pattern(
         sim_results = _load_sim_rad_results_from_csv(sim_results)
 
     for i, frequency in enumerate(sim_results.frequencies):
+        frequency = f"{frequency:.4f}"
         fig = plt.figure(dpi=300)
         plt.polar(
             sim_results.angles,
             sim_results.sweep_directivity[i],
             color="black",
-            label="simulation",
+            label=f"simulation-{frequency}",
+        )
+        plt.polar(
+            sim_results.angles,
+            sim_results.base_directivity[i],
+            color="blue",
+            label="simulation-base",
         )
         if lab_data_file:
             if not Path(lab_data_file).exists():
@@ -85,9 +92,9 @@ def plot_radiation_pattern(
         ax.grid(True)
         ax.set_rlabel_position(180)
         ax.tick_params(labelsize=18)
-        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-        file_name = Path(output_folder) / f"rad_pattern_{str(frequency).replace(".", "_")}"
-        plt.savefig(file_name)
+        plt.legend(bbox_to_anchor=(1, 1.02), loc='upper left')
+        file_name = Path(output_folder) / f"rad_pattern_{frequency.replace(".", "_")}"
+        plt.savefig(file_name, bbox_inches='tight')
         plt.close()
 
 

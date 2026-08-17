@@ -1,3 +1,4 @@
+import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -12,10 +13,16 @@ ANTENNA_CLASSES = {AntennaType.RF_HORN: RFHorn}
 
 
 class Analysis(ABC):
-    def __init__(self, analysis_config: AnalysisConfig, output_folder: Path | str):
+    def __init__(
+        self,
+        analysis_config: AnalysisConfig,
+        output_folder: Path | str,
+        max_parallelization: int = os.cpu_count() - 1,
+    ):
         self.analysis_config = analysis_config
         self.analysis_type_config = analysis_config.analysis_type_config
         self.antenna_config = analysis_config.antenna_config
+        self.max_parallelization = max_parallelization
 
         self.output_folder: Path | None = None
         self.antennas: list[Antenna] | None = None

@@ -1,3 +1,4 @@
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -190,6 +191,29 @@ class RadPatternAnalysis(Analysis):
             df=df,
         )
 
+    def run_one_sim(self, frequency) -> tuple[Result, Result]:
+        sim = self.setup_sim(frequency=frequency)
+        base_n2f_region = self._get_near2far_region(
+            sim=sim,
+            frequency=self.analysis_type_config.steering_beam_base_frequency,
+        )
+        sweep_n2f_region = self._get_near2far_region(
+            sim=sim, frequency=float(frequency)
+        )
+        sim.run(until=100)
+        base_result = self._calculate_radiation_pattern(
+            frequency=frequency,
+            sim=sim,
+            near2far_region=base_n2f_region,
+        )
+        sweep_result = self._calculate_radiation_pattern(
+            frequency=frequency,
+            sim=sim,
+            near2far_region=sweep_n2f_region,
+        )
+        sim.reset_meep()
+        return base_result, sweep_result
+
     def run_sim(self):
         self._create_antennas()
         frequencies = np.arange(
@@ -199,29 +223,14 @@ class RadPatternAnalysis(Analysis):
         )
         base_results = []
         sweep_results = []
-        for frequency in frequencies:
-            sim = self.setup_sim(frequency=frequency)
-            base_n2f_region = self._get_near2far_region(
-                sim=sim,
-                frequency=self.analysis_type_config.steering_beam_base_frequency,
-            )
-            sweep_n2f_region = self._get_near2far_region(sim=sim, frequency=float(frequency))
-            sim.run(until=100)
-            base_results.append(
-                self._calculate_radiation_pattern(
-                    frequency=frequency,
-                    sim=sim,
-                    near2far_region=base_n2f_region,
-                )
-            )
-            sweep_results.append(
-                self._calculate_radiation_pattern(
-                    frequency=frequency,
-                    sim=sim,
-                    near2far_region=sweep_n2f_region,
-                )
-            )
-            sim.reset_meep()
+
+        with ProcessPoolExecutor(max_workers=self.max_parallelization) as executor:
+            futures = [executor.submit(self.run_one_sim, frequency) for frequency in frequencies]
+            for future in as_completed(futures):
+                base_result, sweep_result = future.result()
+                base_results.append(base_result)
+                sweep_results.append(sweep_result)
+
         self.results = self._aggregate_results(
             base_results=base_results, sweep_results=sweep_results
         )
