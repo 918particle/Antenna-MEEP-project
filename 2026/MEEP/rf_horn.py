@@ -41,13 +41,13 @@ class RF_horn:
 			edge_lower = mp.Vector3(i*self.dx+self.box_size+x,-k_1*np.exp(k_2*(i*self.dx))+y)
 			geometry.append(mp.Block(edge_size,center=edge_upper,material=mp.metal))
 			geometry.append(mp.Block(edge_size,center=edge_lower,material=mp.metal))
-	def source_function(self,frequency,phase):
+	def source_function(self,frequency,phase,amplitude):
 		omega = 2.0*np.pi*frequency
-		return lambda t: np.sin(omega*t-phase)
-	def add_source(self,frequency,phase,sources):
+		return lambda t: amplitude*np.sin(omega*t-phase)
+	def add_source(self,frequency,phase,amplitude,sources):
 		sources.append(
 			mp.Source(
-				mp.CustomSource(src_func=self.source_function(frequency,phase),start_time=1),
+				mp.CustomSource(src_func=self.source_function(frequency,phase,amplitude),start_time=1),
 				component=mp.Ey,
 				center=self.antenna_position,
 				size=self.antenna_size,

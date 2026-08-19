@@ -17,7 +17,7 @@ for f in frequencies:
 	pml_layers = [mp.PML(1.0)]
 	geometry = []
 	sources = []
-	RF_array(geometry,sources,f)
+	RF_array(geometry,sources,f,c.amplitude)
 	sim = mp.Simulation(
 		cell_size=mp.Vector3(c.x_size,c.y_size),
 		boundary_layers=pml_layers,
@@ -32,13 +32,13 @@ for f in frequencies:
 	#Compute radiation patterns
 	theory_results = radiation_pattern.calculate_theoretical_radiation_pattern(0.0,f)
 	results = radiation_pattern.calculate_radiation_pattern(sim,region_objs)
-	#angles=((results[0][0]+np.pi)%(2*np.pi)-np.pi)*180.0/np.pi
-	#for i in range(c.npts):
-	#	print(angles[i],end=' ')
-	#	for result in results:
-	#		directivity = result[1]
-	#		print(directivity[i],end=' ')
-	#	print()
+	angles=((results[0][0]+np.pi)%(2*np.pi)-np.pi)*180.0/np.pi
+	for i in range(c.npts):
+		print(30.0*f,angles[i],end=' ')
+		for result in results:
+			directivity = result[1]
+			print(directivity[i],end=' ')
+		print()
 	#Beamwidth analysis
 	#beams = radiation_pattern.locate_beams(results)
 	#print(beams)
