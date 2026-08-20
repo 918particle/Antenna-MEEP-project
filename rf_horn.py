@@ -90,6 +90,7 @@ class RFHorn(Antenna):
             mp.CustomSource(
                 src_func=self._continuous_wave_source(
                     frequency=self.analysis_type_config.steering_beam_base_frequency,
+                    amplitude=self.analysis_type_config.source_amplitude,
                     phase=self.analysis_type_config.phase + base_phase_offset,
                 ),
                 start_time=1,
@@ -102,6 +103,7 @@ class RFHorn(Antenna):
             mp.CustomSource(
                 src_func=self._continuous_wave_source(
                     frequency=frequency,
+                    amplitude=self.analysis_type_config.source_amplitude,
                     phase=self.analysis_type_config.phase,
                 ),
                 start_time=1,

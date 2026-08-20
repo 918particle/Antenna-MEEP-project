@@ -26,10 +26,10 @@ class Antenna(ABC):
             obj.vertices = [v + mp.Vector3(x_offset, y_offset, 0) for v in obj.vertices]
 
     def _continuous_wave_source(
-        self, frequency: float, phase: float
+        self, frequency: float, amplitude: float, phase: float
     ) -> Callable[[float], float]:
         omega = 2.0 * np.pi * frequency
-        return lambda t: np.sin(omega * t + phase * np.pi / 180.0)
+        return lambda t: amplitude * np.sin(omega * t + phase * np.pi / 180.0)
 
     def _pulse_source(sigma: float, mu: float) -> Callable[[float], float]:
         return lambda t: np.exp(-0.5 * (t - mu) * (t - mu) / sigma / sigma)

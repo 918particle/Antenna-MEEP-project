@@ -8,4 +8,5 @@ ANALYSIS_CONFIG_1HORN_RAD_PATTERN = AnalysisConfig(
     resolution=20,
     dimensionality=Dimensionality.TWO_DIMENSIONAL,
     analysis_type_config=rcac.ANALYSIS_CONFIG_1HORN_RAD_PATTERN,
+    y_offset=10,
 )

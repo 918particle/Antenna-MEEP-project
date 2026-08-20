@@ -97,7 +97,8 @@ class RadPatternAnalysisConfig:
     """Configuration for radiation pattern analysis. Units are in Meep units.
 
     Attributes:
-        steering_beam_base_frequency (float):
+        steering_beam_base_frequency (float): frequency of the steering beam/base frequency.
+        source_amplitude (float): amplitude of the source signal.
         sweep_start (float): Frequency to start the sweep.
         sweep_end (float): Frequency to end the sweep.
         phase (float): The phase of the sweep frequency and first antenna's base frequency.
@@ -107,6 +108,7 @@ class RadPatternAnalysisConfig:
     """
 
     steering_beam_base_frequency: float
+    source_amplitude: float
     sweep_start: float
     sweep_end: float
     d_f: float
