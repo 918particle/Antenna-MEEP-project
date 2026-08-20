@@ -33,5 +33,4 @@ else:
             sim_results=Path("results") / output_folder / "results.csv",
             output_folder=output_folder,
             lab_data_file=lab_data_file,
-            max_parallelization=max_parallelization,
         )
