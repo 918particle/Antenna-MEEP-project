@@ -10,10 +10,10 @@ def make_near_to_far_field_box(sx,sy,xoffset,yoffset,frequency,sim):
     bottom = mp.Near2FarRegion(center=mp.Vector3(xoffset,-0.5*sy+yoffset,0),size=mp.Vector3(sx,0,sy),weight=-1)
     right = mp.Near2FarRegion(center=mp.Vector3(0.5*sx+xoffset,yoffset,0),size=mp.Vector3(0,sy,sy),weight=+1)
     left = mp.Near2FarRegion(center=mp.Vector3(-0.5*sx+xoffset,yoffset,0),size=mp.Vector3(0,sy,sy),weight=-1)
-    #upper = mp.Near2FarRegion(center=mp.Vector3(xoffset,yoffset,0.5*sy),size=mp.Vector3(sx,sy,0),weight=+1)
-    #lower = mp.Near2FarRegion(center=mp.Vector3(xoffset,yoffset,-0.5*sy),size=mp.Vector3(sx,sy,0),weight=-1)
-    #return sim.add_near2far(frequency,0,1,top,bottom,left,right,upper,lower)
-    return sim.add_near2far(frequency,0,1,top,bottom,left,right)
+    upper = mp.Near2FarRegion(center=mp.Vector3(xoffset,yoffset,0.5*sy),size=mp.Vector3(sx,sy,0),weight=+1)
+    lower = mp.Near2FarRegion(center=mp.Vector3(xoffset,yoffset,-0.5*sy),size=mp.Vector3(sx,sy,0),weight=-1)
+    return sim.add_near2far(frequency,0,1,top,bottom,left,right,upper,lower)
+    #return sim.add_near2far(frequency,0,1,top,bottom,left,right)
 def make_flux_region(x,y,lx,ly,sim):
     f_start = 0.0
     f_stop = 0.32
@@ -53,19 +53,19 @@ def calculate_radiation_pattern(sim,projection_box,E_or_H_Plane):
         directivity = 10.0*np.log10(Pr/max(Pr))
         return (angles,directivity)
 def plot_radiation_pattern(angles,directivity,plot_title,E_or_H_Plane):
-    x,y = np.loadtxt('RadPattern_Result_Nov14th.dat',unpack=True)
-    x2,y2 = np.loadtxt('RadPattern_Result_Dec1st.dat',unpack=True)
-    x *= np.pi/180.0
-    x2 += 90.0
-    x2 *= np.pi/180.0
+    #x,y = np.loadtxt('RadPattern_Result_Nov14th.dat',unpack=True)
+    #x2,y2 = np.loadtxt('RadPattern_Result_Dec1st.dat',unpack=True)
+    #x *= np.pi/180.0
+    #x2 += 90.0
+    #x2 *= np.pi/180.0
     g = plt.figure(dpi=300)
     plt.polar(angles,directivity,color='black')
-    if(E_or_H_Plane):
-        plt.polar(x,y,'o',color='black')
-    else:
-        plt.polar(x2,y2,'+',color='black')
+    #if(E_or_H_Plane):
+    #    plt.polar(x,y,'o',color='black')
+    #else:
+    #    plt.polar(x2,y2,'+',color='black')
     ax = g.gca()
-    ax.set_rlim(-26,1)
+    ax.set_rlim(-31,1)
     ax.set_rticks([-15,-3])
     ax.grid(True)
     ax.set_rlabel_position(180)

@@ -14,24 +14,23 @@ TOP_LAYER = 10
 def Plan(resolution,frequency,sigma,mu,radPattern_or_vswr,E_or_H_Plane):
     dpml = 1
     t_all = 1.0 #normally 1.0
-    thickness = 0.0 #normally 0.5
+    thickness = 0.5 #normally 0.5
     if(radPattern_or_vswr):
         back = mp.get_GDSII_prisms(mp.metal,gdsII_file,BACK_PLUG,-t_all,t_all)
         sides = mp.get_GDSII_prisms(mp.metal,gdsII_file,HORN_LAYER,-t_all,t_all)
-        #bottom = mp.get_GDSII_prisms(mp.metal,gdsII_file,TOP_LAYER,-t_all,-t_all+thickness)
-        #top = mp.get_GDSII_prisms(mp.metal,gdsII_file,TOP_LAYER,t_all-thickness,t_all)
-        #geometry = back+sides+top+bottom
-        geometry = sides+back
+        bottom = mp.get_GDSII_prisms(mp.metal,gdsII_file,TOP_LAYER,-t_all,-t_all+thickness)
+        top = mp.get_GDSII_prisms(mp.metal,gdsII_file,TOP_LAYER,t_all-thickness,t_all)
+        geometry = back+sides+top+bottom
+        #geometry = sides+back
         sources = []
         src_vol = mp.GDSII_vol(gdsII_file,SOURCE_LAYER,-thickness/2,thickness/2)
         sources.append(mp.Source(mp.CustomSource(src_func=utility.cw_f(frequency,0.0),start_time=0.0),component=mp.Ey,volume=src_vol,amplitude=1))
-        sim = mp.Simulation(resolution=resolution,cell_size=mp.Vector3(60,60,0),boundary_layers=[mp.PML(dpml)],sources=sources,geometry=geometry)
+        sim = mp.Simulation(resolution=resolution,cell_size=mp.Vector3(60,60,60),boundary_layers=[mp.PML(dpml)],sources=sources,geometry=geometry)
         projection_box = utility.make_near_to_far_field_box(30,15,-10,0,frequency,sim)
-        utility.plot_surfaces(sim)
+        #utility.plot_surfaces(sim)
         #sim.run(mp.to_appended("ey",mp.at_every(0.5, mp.output_efield_y)),until=100)
         sim.run(until=100)
         (angles,directivity) = utility.calculate_radiation_pattern(sim,projection_box,E_or_H_Plane)
-        n = len(angles)
         utility.plot_radiation_pattern(angles,directivity,"rad_pattern.png",E_or_H_Plane)
     else:
         time_steps = 50
