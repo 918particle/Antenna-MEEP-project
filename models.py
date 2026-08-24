@@ -104,7 +104,10 @@ class RadPatternAnalysisConfig:
         phase (float): The phase of the sweep frequency and first antenna's base frequency.
         df (float): Frequency steps to take during sweep between sweep_start and sweep_end.
         plane (Plane): Plane for analysis.
-        d_phase(float): The scalar difference in phase between each antenna's base frequency. Defaults to 1.5.
+        d_phase (float): The  difference in radians in phase between each antenna's base frequency. Defaults to 1.5.
+        num_antenna (int): Number of antennas in array.
+        x_offset (float): The offset in the x direction between antenna. Defaults to 0.0.
+        y_offset (float): The offset in the y direction between antenna. Defaults to 0.0.
     """
 
     steering_beam_base_frequency: float
@@ -115,11 +118,23 @@ class RadPatternAnalysisConfig:
     phase: float = 0.0
     plane: Plane = Plane.E_PLANE
     d_phase: float = 1.5
+    num_antenna: int = 1
+    x_offset: float = 0.0
+    y_offset: float = 0.0
 
     analysis_type: AnalysisType = field(init=False)
 
     def __post_init__(self):
         self.analysis_type = AnalysisType.RAD_PATTERN
+
+
+class FluxDirection(StrEnum):
+    POS_X = "+x"
+    NEG_X = "-x"
+    POS_Y = "+y"
+    NEG_Y = "-y"
+    POS_Z = "+z"
+    NEG_Z = "-z"
 
 
 @dataclass
@@ -129,10 +144,12 @@ class VSWRAnalysisConfig:
     Attributes:
         source_sigma: Sigma for the pulse source function.
         source_mu: Mu for the source pulse function.
+        flux_direction: Direction to monitor flux in.
     """
 
     source_sigma: float
     source_mu: float
+    flux_direction: FluxDirection
     analysis_type: AnalysisType = field(init=False)
 
     def __post_init__(self):
@@ -145,22 +162,16 @@ class AnalysisConfig:
 
     Attributes:
         antenna_config (AntennaConfig): Config of antenna to analyze.
-        num_antenna (int): Number of antennas in array.
         resolution (int): Number of pixels per distance unit.
         dimensionality (Dimensionality): Number of dimensions to analyze.
-        x_offset (float): The offset in the x direction between antenna. Defaults to 0.0.
-        y_offset (float): The offset in the y direction between antenna. Defaults to 0.0.
         dpml (float): Thickness of perfectly matched layer (PML). Defaults to 1.0.
         analysis_type_config (RadPatternAnalysisConfig | VSWRAnalysisConfig): Config for type of analysis to perform.
     """
 
     antenna_config: AntennaConfig
-    num_antenna: int
     resolution: int
     dimensionality: Dimensionality
     analysis_type_config: RadPatternAnalysisConfig | VSWRAnalysisConfig
-    x_offset: float = 0.0
-    y_offset: float = 0.0
     dpml: float = 1.0
     analysis_type: AnalysisType = field(init=False)
 
@@ -169,27 +180,18 @@ class AnalysisConfig:
 
 
 @dataclass
-class Near2FarDimensions:
-    x_size: float
-    y_size: float
-    x_center: float
-    y_center: float
-    z_size: float | None = None
-    z_center: float | None = None
-
-
-@dataclass
 class RadPatternResults:
     """_summary_
 
     Attributes:
+        steering_beam_base_frequency (float): frequency of the steering beam/base frequency.
         frequencies (NDArray[np.float32]): Frequencies analyzed. 1D array. Units: Radians.
         angles (NDArray[np.float32]): Angles analyzed. 1D array. Units: Radians.
         directivity (NDArray[np.float64]): Directivity expressed in decibles. 2D array.
                                     directivity[i, j] corresponds to the directivity at
                                     frequencies[i] and angles[j]. Units: dBi.
     """
-
+    steering_beam_base_frequency: float
     frequencies: NDArray[np.float32]
     angles: NDArray[np.float32]
     base_directivity: NDArray[np.float64]

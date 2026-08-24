@@ -5,7 +5,7 @@ from pathlib import Path
 import meep as mp
 
 from antenna import Antenna
-from models import AnalysisConfig, AntennaType, Dimensionality
+from models import AnalysisConfig, AnalysisType, AntennaType, Dimensionality
 from rf_horn import RFHorn
 from utilities import plot_surfaces, resolve_output_folder
 
@@ -39,18 +39,26 @@ class Analysis(ABC):
     def _create_antennas(self):
         self.antennas = []
         self.geometry = []
+        if self.analysis_config.analysis_type == AnalysisType.RAD_PATTERN:
+            num_antenna = self.analysis_type_config.num_antenna
+            x_offset = self.analysis_type_config.x_offset
+            y_offset = self.analysis_type_config.y_offset
+        else:  # VSWR
+            num_antenna = 1
+            x_offset = 0
+            y_offset = 0
 
         # TODO: make it so it can create copies of the antenna and shift over
         # instead of creating whole new antenna every time?
-        for i in range(self.analysis_config.num_antenna):
+        for i in range(num_antenna):
             antenna: Antenna = ANTENNA_CLASSES[self.antenna_config.antenna_type](
                 analysis_config=self.analysis_config
             )
             self.antennas.append(antenna)
 
             antenna.set_geometry(
-                x_offset=self.analysis_config.x_offset * i,
-                y_offset=self.analysis_config.y_offset * i,
+                x_offset=x_offset * i,
+                y_offset=y_offset * i,
             )
             self.geometry.extend(antenna.geometry)
 

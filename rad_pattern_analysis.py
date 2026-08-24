@@ -11,13 +11,22 @@ from analysis import Analysis
 from models import (
     AnalysisConfig,
     Dimensionality,
-    Near2FarDimensions,
     Plane,
     RadPatternResults,
 )
 from utilities import plot_radiation_pattern
 
 N2F_BOX_MARGIN = 1
+
+
+@dataclass
+class Near2FarDimensions:
+    x_size: float
+    y_size: float
+    x_center: float
+    y_center: float
+    z_size: float | None = None
+    z_center: float | None = None
 
 
 @dataclass
@@ -130,8 +139,8 @@ class RadPatternAnalysis(Analysis):
         sources = []
         for i, antenna in enumerate(self.antennas):
             antenna.set_source(
-                x_offset=self.analysis_config.x_offset * i,
-                y_offset=self.analysis_config.y_offset * i,
+                x_offset=self.analysis_type_config.x_offset * i,
+                y_offset=self.analysis_type_config.y_offset * i,
                 frequency=frequency,
                 base_phase_offset=self.analysis_type_config.d_phase * i,
             )
@@ -184,6 +193,7 @@ class RadPatternAnalysis(Analysis):
             }
         )
         return RadPatternResults(
+            steering_beam_base_frequency=self.analysis_type_config.steering_beam_base_frequency,
             frequencies=frequencies,
             angles=angles,
             base_directivity=base_directivity,
@@ -225,7 +235,10 @@ class RadPatternAnalysis(Analysis):
         sweep_results = []
 
         with ProcessPoolExecutor(max_workers=self.max_parallelization) as executor:
-            futures = [executor.submit(self.run_one_sim, frequency) for frequency in frequencies]
+            futures = [
+                executor.submit(self.run_one_sim, frequency)
+                for frequency in frequencies
+            ]
             for future in as_completed(futures):
                 base_result, sweep_result = future.result()
                 base_results.append(base_result)

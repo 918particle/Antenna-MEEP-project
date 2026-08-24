@@ -78,7 +78,7 @@ def plot_radiation_pattern(
             sim_results.angles,
             sim_results.base_directivity[i],
             color="blue",
-            label="simulation-base",
+            label=f"simulation-base-{sim_results.steering_beam_base_frequency}",
         )
         if lab_data_file:
             if not Path(lab_data_file).exists():

@@ -9,4 +9,6 @@ ANALYSIS_CONFIG_1HORN_RAD_PATTERN = RadPatternAnalysisConfig(
     phase=0.0,
     plane=Plane.E_PLANE,
     d_phase=1.5,
+    num_antenna=2,
+    y_offset=10,
 )
