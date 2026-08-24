@@ -16,7 +16,7 @@ def make_near_to_far_field_box(sx,sy,xoffset,yoffset,frequency,sim):
     #return sim.add_near2far(frequency,0,1,top,bottom,left,right)
 def make_flux_region(x,y,lx,ly,sim):
     f_start = 0.0
-    f_stop = 0.32
+    f_stop = 0.6
     number_of_frequencies = 1024
     f_center = (f_stop+f_start)/2.0;
     df = f_stop-f_start
