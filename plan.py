@@ -42,13 +42,13 @@ def Plan(resolution,frequency,sigma,mu,radPattern_or_vswr,E_or_H_Plane):
         src_vol = mp.GDSII_vol(gdsII_file,SOURCE_LAYER_2,-t_all,t_all)
         sources.append(mp.Source(mp.CustomSource(src_func=utility.pulse_f(sigma,mu),start_time=0.0),component=mp.Ex,volume=src_vol,amplitude=1))
         sim = mp.Simulation(resolution=resolution,cell_size=mp.Vector3(150,150),boundary_layers=[mp.PML(dpml)],sources=sources,geometry=geometry)
-        flux_monitor = utility.make_flux_region(-12.2,7.649,1.1,0.0551,sim)
+        flux_monitor = utility.make_flux_region(-12.2,7.5,1.1,0.055,sim)
         utility.plot_surfaces(sim)
         sim.run(until=time_steps)
         normalization_run = sim.get_flux_data(flux_monitor)
         normalization_flux = mp.get_fluxes(flux_monitor)
         sim.reset_meep()
-        sim = mp.Simulation(resolution=resolution,cell_size=mp.Vector3(100,100),boundary_layers=[mp.PML(dpml)],sources=sources,geometry=geometry)
+        sim = mp.Simulation(resolution=resolution,cell_size=mp.Vector3(150,150),boundary_layers=[mp.PML(dpml)],sources=sources,geometry=geometry)
         flux_monitor = utility.make_flux_region(-12.2,7.5,1.1,0.055,sim)
         sim.load_minus_flux_data(flux_monitor,normalization_run)
         sim.run(until=2*time_steps)
@@ -59,7 +59,7 @@ def Plan(resolution,frequency,sigma,mu,radPattern_or_vswr,E_or_H_Plane):
         results = np.zeros((n,2),dtype=float)
         for i in range(n):
             gamma = np.abs(reflection_flux[i]/normalization_flux[i])
-            vswr = np.abs((1+gamma)/(1-gamma))
+            vswr = (1+np.sqrt(gamma))/(1-np.sqrt(gamma))
             results[i][0] = flux_frequencies[i]*30
             results[i][1] = vswr
         np.savetxt("vswr.dat",results)
