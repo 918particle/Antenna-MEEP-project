@@ -8,7 +8,7 @@ from utilities import plot_radiation_pattern
 
 # ====== INPUTS =======
 
-config = ac.ANALYSIS_CONFIG_1HORN_RAD_PATTERN
+config = ac.ANALYSIS_CONFIG_HORN_RAD_PATTERN
 output_folder = "analysis1"
 lab_data_file = "RadPattern_Result_Nov14th.dat"  # .dat file containing lab data to plot against. optional input, put None if ignoring
 use_existing_outputs = False  # True if using results from already ran simulation in output folder, False if want to rerun

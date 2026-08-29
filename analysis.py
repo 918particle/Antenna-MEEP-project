@@ -66,8 +66,8 @@ class Analysis(ABC):
     def _get_sources(self, **kwargs) -> list[mp.Source]:
         pass
 
-    def setup_sim(self, frequency: float | None = None) -> mp.Simulation:
-        sources = self._get_sources(frequency=frequency)
+    def setup_sim(self, **kwargs) -> mp.Simulation:
+        sources = self._get_sources(**kwargs)
 
         if self.analysis_config.dimensionality == Dimensionality.TWO_DIMENSIONAL:
             cell_size = mp.Vector3(60, 60, 0)
