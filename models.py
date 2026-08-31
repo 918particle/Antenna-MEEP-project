@@ -144,12 +144,10 @@ class VSWRAnalysisConfig:
     Attributes:
         source_sigma: Sigma for the pulse source function.
         source_mu: Mu for the source pulse function.
-        flux_direction: Direction to monitor flux in.
     """
 
     source_sigma: float
     source_mu: float
-    flux_direction: FluxDirection
     analysis_type: AnalysisType = field(init=False)
 
     def __post_init__(self):
@@ -181,19 +179,35 @@ class AnalysisConfig:
 
 @dataclass
 class RadPatternResults:
-    """_summary_
+    """Results from radiation pattern analysis.
 
     Attributes:
-        steering_beam_base_frequency (float): frequency of the steering beam/base frequency.
-        frequencies (NDArray[np.float32]): Frequencies analyzed. 1D array. Units: Radians.
+        steering_beam_base_frequency (float): Frequency of the steering beam/base frequency. Meep units.
+        frequencies (NDArray[np.float32]): Frequencies analyzed. 1D array. Units: Meep units.
         angles (NDArray[np.float32]): Angles analyzed. 1D array. Units: Radians.
         directivity (NDArray[np.float64]): Directivity expressed in decibles. 2D array.
                                     directivity[i, j] corresponds to the directivity at
                                     frequencies[i] and angles[j]. Units: dBi.
+        df (pd.DataFrame): Results stored as a Pandas DataFrame.
     """
     steering_beam_base_frequency: float
     frequencies: NDArray[np.float32]
     angles: NDArray[np.float32]
     base_directivity: NDArray[np.float64]
     sweep_directivity: NDArray[np.float64]
+    df: pd.DataFrame
+
+@dataclass
+class VSWRResults:
+    """Results from VSWR analysis. Units are in Meep units.
+
+    Attributes:
+        frequencies (NDArray[np.float64]): Frequencies analyzed. 1D array.
+        gamma (NDArray[np.float64]): Magnitude of the reflection coefficient. 1D array.
+        vswr (NDArray[np.float64]): Voltage standing wave ratio. 1D array.
+        df (pd.DataFrame): Results stored as a Pandas DataFrame.
+    """
+    frequencies: NDArray[np.float64]
+    gamma: NDArray[np.float64]
+    vswr: NDArray[np.float64]
     df: pd.DataFrame

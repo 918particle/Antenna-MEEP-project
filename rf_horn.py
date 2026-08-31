@@ -61,6 +61,7 @@ class RFHorn(Antenna):
             zmin=-self.antenna_config.z_thickness,
             zmax=self.antenna_config.z_thickness,
         )
+        self.conductors = conductors
         self.geometry.extend(conductors)
         dielectric = mp.get_GDSII_prisms(
             material=mp.Medium(epsilon=2),
@@ -69,6 +70,7 @@ class RFHorn(Antenna):
             zmin=-self.antenna_config.z_thickness,
             zmax=self.antenna_config.z_thickness,
         )
+        self.dielectric = dielectric
         self.geometry.extend(dielectric)
 
     def _set_source_rad_pattern(
@@ -114,18 +116,13 @@ class RFHorn(Antenna):
         )
         self.sources = [self.base_source, self.sweep_source]
 
-    def _set_source_vswr(
-        self,
-        x_offset: float = 0.0,
-        y_offset: float = 0.0,
-    ):
+    def _set_source_vswr(self):
         src_vol = mp.GDSII_vol(
-            fname=self._file_config.file_path,
+            fname=str(self._file_config.file_path),
             layer=self._file_config.source_layer,
             zmin=-self.antenna_config.z_thickness,
             zmax=self.antenna_config.z_thickness,
         )
-        src_vol.center = src_vol.center + mp.Vector3(x_offset, y_offset, 0)
 
         self.pulse_source = mp.Source(
             mp.CustomSource(

@@ -5,7 +5,14 @@ from pathlib import Path
 import meep as mp
 
 from antenna import Antenna
-from models import AnalysisConfig, AnalysisType, AntennaType, Dimensionality
+from models import (
+    AnalysisConfig,
+    AnalysisType,
+    AntennaType,
+    Dimensionality,
+    RadPatternResults,
+    VSWRResults,
+)
 from rf_horn import RFHorn
 from utilities import plot_surfaces, resolve_output_folder
 
@@ -27,6 +34,7 @@ class Analysis(ABC):
         self.output_folder: Path | None = None
         self.antennas: list[Antenna] | None = None
         self.geometry: list[mp.GeometricObject] | None = None
+        self.results: RadPatternResults | VSWRResults | None = None
 
         self._set_up_output_directory(output_folder=output_folder)
 

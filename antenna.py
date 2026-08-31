@@ -15,6 +15,8 @@ class Antenna(ABC):
         self.dimensionality: Dimensionality = analysis_config.dimensionality
 
         self.geometry: list[mp.GeometricObject] | None = None
+        self.conductors: list[mp.GeometricObject] | None = None
+        self.dielectric: list[mp.GeometricObject] | None = None
         self.base_source: mp.Source | None = None
         self.sweep_source: mp.Source | None = None
         self.pulse_source: mp.Source | None = None
@@ -31,7 +33,7 @@ class Antenna(ABC):
         omega = 2.0 * np.pi * frequency
         return lambda t: amplitude * np.sin(omega * t + phase * np.pi / 180.0)
 
-    def _pulse_source(sigma: float, mu: float) -> Callable[[float], float]:
+    def _pulse_source(self, sigma: float, mu: float) -> Callable[[float], float]:
         return lambda t: np.exp(-0.5 * (t - mu) * (t - mu) / sigma / sigma)
 
     @abstractmethod
@@ -67,11 +69,7 @@ class Antenna(ABC):
         pass
 
     @abstractmethod
-    def _set_source_vswr(
-        self,
-        x_offset: float = 0.0,
-        y_offset: float = 0.0,
-    ):
+    def _set_source_vswr(self):
         pass
 
     def set_source(
@@ -89,4 +87,4 @@ class Antenna(ABC):
                 base_phase_offset=base_phase_offset,
             )
         elif self.analysis_type_config.analysis_type == AnalysisType.VSWR:
-            self._set_source_vswr(x_offset=x_offset, y_offset=y_offset)
+            self._set_source_vswr()

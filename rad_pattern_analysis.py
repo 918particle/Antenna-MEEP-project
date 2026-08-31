@@ -14,9 +14,10 @@ from models import (
     Plane,
     RadPatternResults,
 )
-from utilities import plot_radiation_pattern
+from utilities import plot_radiation_pattern, plot_surfaces
 
 N2F_BOX_MARGIN = 1
+SIM_TIMESTEPS = 100
 
 
 @dataclass
@@ -47,7 +48,6 @@ class Result:
 class RadPatternAnalysis(Analysis):
     def __init__(self, analysis_config: AnalysisConfig, output_folder: str):
         super().__init__(analysis_config=analysis_config, output_folder=output_folder)
-        self.results: RadPatternResults | None = None
 
     def _get_near2far_dimensions(self) -> Near2FarDimensions:
         x_coords = [vertex.x for prism in self.geometry for vertex in prism.vertices]
@@ -186,6 +186,7 @@ class RadPatternAnalysis(Analysis):
 
         df = pd.DataFrame(
             {
+                "steering_beam_base_frequency": self.analysis_type_config.steering_beam_base_frequency,
                 "frequency": np.repeat(frequencies, len(angles)),
                 "angle": np.tile(angles, len(frequencies)),
                 "base_directivity": base_directivity.ravel(),
@@ -210,7 +211,9 @@ class RadPatternAnalysis(Analysis):
         sweep_n2f_region = self._get_near2far_region(
             sim=sim, frequency=float(frequency)
         )
-        sim.run(until=100)
+        if self.analysis_config.dimensionality == Dimensionality.TWO_DIMENSIONAL:
+            plot_surfaces(sim=sim, output_folder=self.output_folder, file_name="rad_pattern_surfaces")
+        sim.run(until=SIM_TIMESTEPS)
         base_result = self._calculate_radiation_pattern(
             frequency=frequency,
             sim=sim,
@@ -247,7 +250,7 @@ class RadPatternAnalysis(Analysis):
         self.results = self._aggregate_results(
             base_results=base_results, sweep_results=sweep_results
         )
-        self.results.df.to_csv(f"{self.output_folder}/results.csv")
+        self.results.df.to_csv(f"{self.output_folder}/rad_pattern_results.csv")
 
     def plot_results(self, lab_data_file: Path | str | None = None):
         plot_radiation_pattern(
