@@ -3,7 +3,7 @@ import numpy as np
 import utility
 
 gdsII_file = 'test.gds'
-gdsII_file_no_horn = 'no_horn.gds'
+gdsII_file_2 = 'no_horn.gds'
 HORN_LAYER = 2
 WIRE_LAYER = 3
 COND_LAYER = 5
@@ -38,12 +38,20 @@ def Plan(resolution,frequency,sigma,mu,radPattern_or_vswr,E_or_H_Plane):
     else:
         dpml = 5
         time_steps = 115
-        geometry = ??
+        wire = mp.get_GDSII_prisms(mp.metal,gdsII_file_2,WIRE_LAYER,-t_3,t_3)
+        conductors = mp.get_GDSII_prisms(mp.metal,gdsII_file_2,COND_LAYER,-t_1,t_1)
+        t_conductor = mp.get_GDSII_prisms(mp.metal,gdsII_file_2,COND_LAYER_2,t_2,t_1)
+        b_conductor = mp.get_GDSII_prisms(mp.metal,gdsII_file_2,COND_LAYER_2,-t_1,-t_2)
+        dielectric = mp.get_GDSII_prisms(mp.Medium(epsilon=2),gdsII_file_2,DIEL_LAYER,-t_2,t_2)
+        t_dielectric = mp.get_GDSII_prisms(mp.Medium(epsilon=2),gdsII_file_2,DIEL_LAYER_2,t_3,t_2)
+        b_dielectric = mp.get_GDSII_prisms(mp.Medium(epsilon=2),gdsII_file_2,DIEL_LAYER_2,-t_2,-t_3)
+        geometry = []
+        geometry = wire+conductors+t_conductor+b_conductor+dielectric+t_dielectric+b_dielectric
         sources = []
-        src_vol = mp.GDSII_vol(gdsII_file,SOURCE_LAYER_2,-t_middle,t_middle)
+        src_vol = mp.GDSII_vol(gdsII_file,SOURCE_LAYER_2,-t_3,t_3)
         sources.append(mp.Source(mp.CustomSource(src_func=utility.pulse_f(sigma,mu),start_time=0.0),component=mp.Ex,volume=src_vol,amplitude=1))
         sim = mp.Simulation(resolution=resolution,cell_size=mp.Vector3(68,68,30),boundary_layers=[mp.PML(dpml)],sources=sources,geometry=geometry)
-        flux_monitor = utility.make_flux_region(0,11.0,1.0,1.5,sim)
+        flux_monitor = utility.make_flux_region(0,11.0,1.0,3.5,sim)
         sim.run(until=time_steps)
         normalization_run = sim.get_flux_data(flux_monitor)
         normalization_flux = mp.get_fluxes(flux_monitor)
@@ -59,12 +67,13 @@ def Plan(resolution,frequency,sigma,mu,radPattern_or_vswr,E_or_H_Plane):
         top = mp.get_GDSII_prisms(mp.metal,gdsII_file,TOP_LAYER,t_2,t_1)
         bottom = mp.get_GDSII_prisms(mp.metal,gdsII_file,TOP_LAYER,-t_1,-t_2)
         geometry = []
-        geometry = conductors+t_conductor+b_conductor+dielectric+sides+top+bottom
+        geometry = wire+conductors+t_conductor+b_conductor
+        geometry = geometry+dielectric+t_dielectric+b_dielectric+sides+top+bottom
         sim = mp.Simulation(resolution=resolution,cell_size=mp.Vector3(68,68,30),boundary_layers=[mp.PML(dpml)],sources=sources,geometry=geometry)
-        flux_monitor = utility.make_flux_region(0,11.0,1.0,0,1.5,sim)
+        flux_monitor = utility.make_flux_region(0,11.0,1.0,3.5,sim)
         sim.load_minus_flux_data(flux_monitor,normalization_run)
-        sim.run(mp.to_appended("ex",mp.at_every(1, mp.output_efield_x)),until=time_steps)
-        #sim.run(until=time_steps)
+        #sim.run(mp.to_appended("ex",mp.at_every(1, mp.output_efield_x)),until=time_steps)
+        sim.run(until=time_steps)
         reflection_flux = mp.get_fluxes(flux_monitor)
         flux_frequencies = mp.get_flux_freqs(flux_monitor)
         n = len(flux_frequencies)
@@ -76,4 +85,3 @@ def Plan(resolution,frequency,sigma,mu,radPattern_or_vswr,E_or_H_Plane):
             results[i][1] = gamma
             results[i][2] = vswr
         np.savetxt("vswr.dat",results)
-        utility.plot_surfaces(sim)
