@@ -15,8 +15,8 @@ def make_near_to_far_field_box(sx,sy,xoffset,yoffset,frequency,sim):
     return sim.add_near2far(frequency,0,1,top,bottom,left,right,upper,lower)
 def make_flux_region(x,y,lx,lz,sim):
     f_start = 0.0
-    f_stop = 0.6
-    number_of_frequencies = 1024
+    f_stop = 1.2
+    number_of_frequencies = 2048
     f_center = (f_stop+f_start)/2.0;
     df = f_stop-f_start
     flux_monitor_volume = mp.FluxRegion(center=mp.Vector3(x,y,0),size=mp.Vector3(lx,0,lz),direction=-mp.Y)
