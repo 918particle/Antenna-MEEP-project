@@ -3,7 +3,7 @@ from plan import Plan
 
 def main():
     resolution = 10
-    sigma = 0.5
+    sigma = 0.25
     mu = 1
     cw_frequency = 0.2
     rad_or_vswr = 0

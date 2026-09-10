@@ -4,10 +4,10 @@ set output "Sept4_plot1.pdf"
 set xlabel "Frequency [GHz]" font "Courier,20"
 set ylabel "VSWR" font "Courier,20"
 
-set xtics 0,2,20 font "Courier,20"
+set xtics 0,5,30 font "Courier,20"
 set ytics 0,5,30 font "Courier,20"
 
-set xrange [0:18]
+set xrange [0:30]
 set yrange [0:30]
 
 set pointsize 0.75
