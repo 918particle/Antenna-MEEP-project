@@ -49,7 +49,8 @@ def Plan(resolution,frequency,sigma,mu,radPattern_or_vswr,E_or_H_Plane):
         geometry = wire+conductors+t_conductor+b_conductor+dielectric+t_dielectric+b_dielectric
         sources = []
         src_vol = mp.GDSII_vol(gdsII_file,SOURCE_LAYER_2,-t_3,t_3)
-        sources.append(mp.Source(mp.CustomSource(src_func=utility.pulse_f(sigma,mu),start_time=0.0),component=mp.Ex,volume=src_vol,amplitude=1))
+        sources.append(mp.Source(mp.CustomSource(src_func=utility.pulse_f(sigma,mu),start_time=0.0),component=mp.Ex,volume=src_vol,amplitude=1/np.sqrt(2)))
+        sources.append(mp.Source(mp.CustomSource(src_func=utility.pulse_f(sigma,mu),start_time=0.0),component=mp.Ez,volume=src_vol,amplitude=1/np.sqrt(2)))
         sim = mp.Simulation(resolution=resolution,cell_size=mp.Vector3(68,68,30),boundary_layers=[mp.PML(dpml)],sources=sources,geometry=geometry)
         flux_monitor = utility.make_flux_region(0,11.0,1.0,3.5,sim)
         sim.run(until=time_steps)
