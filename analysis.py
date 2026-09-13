@@ -15,7 +15,7 @@ from models import (
     VSWRResults,
 )
 from rf_horn import RFHorn
-from utilities import resolve_output_folder
+from utilities import filter_kwargs, resolve_output_folder
 
 ANTENNA_CLASSES = {AntennaType.RF_HORN: RFHorn}
 CELL_PADDING = 20
@@ -98,11 +98,13 @@ class Analysis(ABC):
             self.geometry.extend(antenna.geometry)
 
     def _get_cell_dimensions(self) -> tuple[int, int, int]:
-        self._create_antennas(only_cable=False)
-        self._get_centering_adjustment()
+        temp_geometry = (
+            self.geometry
+        )  # need to do because _create_antennas() overwrites it
 
-        # now recreate them properly centered
-        self._create_antennas(only_cable=False)
+        if self.analysis_config.analysis_type == AnalysisType.VSWR:
+            # only need to recreate antennas for VSWR because it changes across parts of the sim (RadPattern doesn't)
+            self._create_antennas(only_cable=False)
 
         vertices = [vertice for prism in self.geometry for vertice in prism.vertices]
         x_dim = (
@@ -118,6 +120,8 @@ class Analysis(ABC):
             )
         else:
             z_dim = 0
+
+        self.geometry = temp_geometry  # reset to desired geometry
         return x_dim, y_dim, z_dim
 
     @abstractmethod
@@ -127,8 +131,8 @@ class Analysis(ABC):
     def setup_sim(self, **kwargs) -> mp.Simulation:
         x_dim, y_dim, z_dim = self._get_cell_dimensions()
         cell_size = mp.Vector3(x_dim, y_dim, z_dim)
-        
-        sources = self._get_sources(**kwargs)
+
+        sources = self._get_sources(**filter_kwargs(self._get_sources, kwargs))
 
         sim = mp.Simulation(
             resolution=self.analysis_config.resolution,

@@ -229,6 +229,9 @@ class RadPatternAnalysis(Analysis):
 
     def run_sim(self):
         self._create_antennas()
+        self._get_centering_adjustment()
+        self._create_antennas()  # need to rerun post setting offset to center antennas
+
         frequencies = np.arange(
             self.analysis_type_config.sweep_start,
             self.analysis_type_config.sweep_end,

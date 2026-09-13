@@ -53,8 +53,8 @@ class Antenna(ABC):
         x_offset: float = 0.0,
         y_offset: float = 0.0,
         only_cable: bool = False,
-        x_centering_adjustment = 0.0,
-        y_centering_adjustment = 0.0,
+        x_centering_adjustment=0.0,
+        y_centering_adjustment=0.0,
     ) -> None:
         self.geometry = []
 
@@ -67,7 +67,9 @@ class Antenna(ABC):
                 self._set_geometry_vswr()
 
         self._shift_antenna(x_offset=x_offset, y_offset=y_offset)
-        self._shift_antenna(x_offset=x_centering_adjustment, y_offset=y_centering_adjustment)
+        self._shift_antenna(
+            x_offset=x_centering_adjustment, y_offset=y_centering_adjustment
+        )
 
     @abstractmethod
     def _set_source_rad_pattern(
@@ -80,7 +82,11 @@ class Antenna(ABC):
         pass
 
     @abstractmethod
-    def _set_source_vswr(self):
+    def _set_source_vswr(
+        self,
+        x_offset: float = 0.0,
+        y_offset: float = 0.0,
+    ):
         pass
 
     def set_source(
@@ -98,4 +104,7 @@ class Antenna(ABC):
                 base_phase_offset=base_phase_offset,
             )
         elif self.analysis_type_config.analysis_type == AnalysisType.VSWR:
-            self._set_source_vswr()
+            self._set_source_vswr(
+                x_offset=x_offset,
+                y_offset=y_offset,
+            )

@@ -16,6 +16,7 @@ from utilities import plot_surfaces, plot_vswr
 SIM_TIMESTEPS = 115
 FLUX_MONITOR_PADDING = 0
 
+
 @dataclass
 class FluxMonitorDimensions:
     """Dataclass storing dimensions for a flux monitor.
@@ -27,7 +28,8 @@ class FluxMonitorDimensions:
         x_center (float): Center point in x.
         y_center (float): Center point in y.
         z_center (float): Center point in z. Defaults to 0.
-    """    
+    """
+
     x_size: float
     y_size: float
     x_center: float
@@ -110,16 +112,27 @@ class VSWRAnalysis(Analysis):
     def _get_sources(self) -> list[mp.Source]:
         sources = []
         for antenna in self.antennas:
-            antenna.set_source()
+            antenna.set_source(
+                x_offset=self.x_centering_adjustment,
+                y_offset=self.y_centering_adjustment,
+            )
             sources.extend(antenna.sources)
         return sources
 
     def run_sim(self):
-        self._create_antennas(only_cable=True)
-        sim = self.setup_sim()
+        self._create_antennas()
+        self._get_centering_adjustment()
+        self._create_antennas(
+            only_cable=True
+        )  # need to rerun post setting offset to center antennas
+        sim = self.setup_sim(only_cable=True)
         flux_monitor = self._get_flux_region(sim=sim)
         if self.analysis_config.dimensionality == Dimensionality.TWO_DIMENSIONAL:
-            plot_surfaces(sim=sim, output_folder=self.output_folder, file_name="vswr_surfaces_only_cable")
+            plot_surfaces(
+                sim=sim,
+                output_folder=self.output_folder,
+                file_name="vswr_surfaces_only_cable",
+            )
         sim.run(until=SIM_TIMESTEPS)
         normalization_run = sim.get_flux_data(flux_monitor)
         normalization_flux = mp.get_fluxes(flux_monitor)
@@ -129,14 +142,16 @@ class VSWRAnalysis(Analysis):
         sim = self.setup_sim()
         flux_monitor = self._get_flux_region(sim=sim)
         if self.analysis_config.dimensionality == Dimensionality.TWO_DIMENSIONAL:
-            plot_surfaces(sim=sim, output_folder=self.output_folder, file_name="vswr_surfaces")
+            plot_surfaces(
+                sim=sim, output_folder=self.output_folder, file_name="vswr_surfaces"
+            )
         sim.load_minus_flux_data(flux_monitor, normalization_run)
         sim.run(until=SIM_TIMESTEPS)
         reflection_flux = mp.get_fluxes(flux_monitor)
         flux_frequencies = mp.get_flux_freqs(flux_monitor)
 
         frequencies = np.array(flux_frequencies) * 30
-        gamma = np.abs(np.divide(reflection_flux,normalization_flux))
+        gamma = np.abs(np.divide(reflection_flux, normalization_flux))
         vswr = (1 + gamma) / (1 - gamma)
         df = pd.DataFrame(
             {

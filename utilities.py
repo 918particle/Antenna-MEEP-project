@@ -1,4 +1,7 @@
+import inspect
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import meep as mp
@@ -75,6 +78,24 @@ def resolve_output_folder(output_folder: Path | str) -> Path:
         return output_folder
     return results_dir / output_folder.name
 
+
+def filter_kwargs(func: Callable, kwargs: dict)-> dict[str, Any]:
+    """Filter kwargs to just what a certain function has as inputs. So you don't break stuff by passing in invalid params :)
+
+    Args:
+        func (Callable): The function you are filtering kwargs for.
+        kwargs (dict): Kwargs without unpacking. kwargs=kwargs.
+
+    Returns:
+        dict[str, Any]: Filtered kwargs dict
+    """
+    sig = inspect.signature(func)
+
+    return {
+        key: value
+        for key, value in kwargs.items()
+        if key in sig.parameters
+    }
 
 def plot_radiation_pattern(
     sim_results: RadPatternResults | Path | str,
@@ -153,7 +174,7 @@ def plot_vswr(
     plt.legend(bbox_to_anchor=(1, 1.02), loc="upper left")
 
     file_name = Path(output_folder) / "vswr"
-    plt.savefig(file_name, format="pdf", bbox_inches="tight")
+    plt.savefig(file_name, bbox_inches="tight")
     plt.close()
 
 

@@ -138,7 +138,7 @@ class RFHorn(Antenna):
         base_phase_offset: float,
         x_offset: float = 0.0,
         y_offset: float = 0.0,
-    ):
+    ) -> None:
         src_vol = mp.GDSII_vol(
             fname=str(self._file_config.file_path),
             layer=self._file_config.source_layer,
@@ -175,13 +175,18 @@ class RFHorn(Antenna):
         )
         self.sources = [self.base_source, self.sweep_source]
 
-    def _set_source_vswr(self):
+    def _set_source_vswr(
+        self,
+        x_offset: float = 0.0,
+        y_offset: float = 0.0,
+    ) -> None:
         src_vol = mp.GDSII_vol(
             fname=str(self._file_config.file_path),
             layer=self._file_config.source_layer,
             zmin=-self.antenna_config.wire_thickness / 2,
             zmax=self.antenna_config.wire_thickness / 2,
         )
+        src_vol.center = src_vol.center + mp.Vector3(x_offset, y_offset, 0)
 
         self.pulse_source = mp.Source(
             mp.CustomSource(
