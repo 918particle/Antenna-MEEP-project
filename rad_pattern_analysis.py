@@ -139,8 +139,8 @@ class RadPatternAnalysis(Analysis):
         sources = []
         for i, antenna in enumerate(self.antennas):
             antenna.set_source(
-                x_offset=self.analysis_type_config.x_offset * i,
-                y_offset=self.analysis_type_config.y_offset * i,
+                x_offset=(self.analysis_type_config.x_offset * i) + self.x_centering_adjustment,
+                y_offset=(self.analysis_type_config.y_offset * i) + self.y_centering_adjustment,
                 frequency=frequency,
                 base_phase_offset=self.analysis_type_config.d_phase * i,
             )

@@ -14,10 +14,20 @@ from models import (
 from utilities import plot_surfaces, plot_vswr
 
 SIM_TIMESTEPS = 115
-
+FLUX_MONITOR_PADDING = 0
 
 @dataclass
 class FluxMonitorDimensions:
+    """Dataclass storing dimensions for a flux monitor.
+
+    Attributes:
+        x_size (float): Size in x dimension.
+        y_size (float): Size in y dimension.
+        z_size (float): Size in z dimension. Defaults to 0.
+        x_center (float): Center point in x.
+        y_center (float): Center point in y.
+        z_center (float): Center point in z. Defaults to 0.
+    """    
     x_size: float
     y_size: float
     x_center: float
@@ -33,17 +43,17 @@ class VSWRAnalysis(Analysis):
     def _get_flux_monitor_dimensions(self) -> FluxMonitorDimensions:
         x_coords = [
             vertex.x
-            for prism in self.antennas[0].dielectric
+            for prism in self.antennas[0].conductor
             for vertex in prism.vertices
         ]
         y_coords = [
             vertex.y
-            for prism in self.antennas[0].dielectric
+            for prism in self.antennas[0].conductor
             for vertex in prism.vertices
         ]
         z_coords = [
             vertex.z
-            for prism in self.antennas[0].dielectric
+            for prism in self.antennas[0].conductor
             for vertex in prism.vertices
         ]
 
@@ -58,9 +68,11 @@ class VSWRAnalysis(Analysis):
         # If the cable is oriented in the x-direction, the monitor should be the y-width
         if x_size > y_size:
             x_size = 0
+            y_size += FLUX_MONITOR_PADDING
         # If the cable is oriented in the y-direction, the monitor should be the x-width
         else:
             y_size = 0
+            x_size += FLUX_MONITOR_PADDING
 
         dims = FluxMonitorDimensions(
             x_size=x_size,
@@ -103,20 +115,23 @@ class VSWRAnalysis(Analysis):
         return sources
 
     def run_sim(self):
-        self._create_antennas()
+        self._create_antennas(only_cable=True)
         sim = self.setup_sim()
         flux_monitor = self._get_flux_region(sim=sim)
         if self.analysis_config.dimensionality == Dimensionality.TWO_DIMENSIONAL:
-            plot_surfaces(sim=sim, output_folder=self.output_folder, file_name="vswr_surfaces")
+            plot_surfaces(sim=sim, output_folder=self.output_folder, file_name="vswr_surfaces_only_cable")
         sim.run(until=SIM_TIMESTEPS)
         normalization_run = sim.get_flux_data(flux_monitor)
         normalization_flux = mp.get_fluxes(flux_monitor)
         sim.reset_meep()
 
+        self._create_antennas()
         sim = self.setup_sim()
         flux_monitor = self._get_flux_region(sim=sim)
+        if self.analysis_config.dimensionality == Dimensionality.TWO_DIMENSIONAL:
+            plot_surfaces(sim=sim, output_folder=self.output_folder, file_name="vswr_surfaces")
         sim.load_minus_flux_data(flux_monitor, normalization_run)
-        sim.run(until=2 * SIM_TIMESTEPS)
+        sim.run(until=SIM_TIMESTEPS)
         reflection_flux = mp.get_fluxes(flux_monitor)
         flux_frequencies = mp.get_flux_freqs(flux_monitor)
 

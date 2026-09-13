@@ -33,11 +33,14 @@ class GDSIIFileConfigHorn:
     Attributes:
         file_path (str): Relative path to the GDSII file of the RF horn.
         horn_sides_layer (int): Layer number containing the side walls of the RF horn.
-        conductive_layer (int): Layer number containing the conductive layer of the RF horn.
-        dielectric_layer (int): Layer number containing the dielectric layer of the RF horn.
         source_layer (int): Layer number containing the source for the RF horn.
         horn_top_layer (int): Layer number containing the top layer of the RF horn.
         back_plug_layer (int): Layer number containing the back plug of the RF horn.
+        wire_layer (int): Layer number containing the wire of the RF horn cable.
+        main_conductive_layer (int): Layer number containing the main conductive layer of the RF horn cable.
+        top_bottom_conductive_layer (int): Layer number containing the layer that forms the top and bottom conductive layers of the RF horn cable.
+        main_dielectric_layer (int): Layer number containing the main dielectric layer of the RF horn cable.
+        top_bottom_dielectric_layer (int): Layer number containing the layer that forms the top and bottom dielectric layers of the RF horn cable.
 
     Raises:
         FileNotFoundError: Raised when path of file_path is not found
@@ -45,11 +48,14 @@ class GDSIIFileConfigHorn:
 
     file_path: Path | str
     horn_sides_layer: int
-    conductive_layer: int
-    dielectric_layer: int
     source_layer: int
     horn_top_layer: int
     back_plug_layer: int
+    wire_layer: int
+    main_conductive_layer: int
+    top_bottom_conductive_layer: int
+    main_dielectric_layer: int
+    top_bottom_dielectric_layer: int
 
     def __post_init__(self):
         self.file_path = Path(self.file_path)
@@ -71,15 +77,17 @@ class AntennaConfig:
     Attributes:
         antenna_type (AntennaType): Type of antenna. Currently just RF Horn but options will be added at a later time.
         gdsii_file_config (GDSIIFileConfigHorn): Config for GDSII file of antenna.
-        xy_thickness (float): Thickness in direction of xy plane. Defaults to 1.0.
-        z_thickness (float): Thickness in direction of z plane. Defaults to 0.0.
+        horn_height (float): Height of antenna in z direction.
+        top_bottom_thickness (float): Thickness of top and bottom faces of antenna in z direction.
+        wire_thickness (float): Thickness of wire in z direction.
     """
 
     antenna_type: AntennaType
     # TODO: when new antenna types are added, add other GDSII file config types to typehint
     gdsii_file_config: GDSIIFileConfigHorn
-    xy_thickness: float = 0.5
-    z_thickness: float = 1.0
+    horn_height: float
+    top_bottom_thickness: float
+    wire_thickness: float
 
     def __post_init__(self):
         if self.antenna_type == AntennaType.RF_HORN:
@@ -175,6 +183,10 @@ class AnalysisConfig:
 
     def __post_init__(self):
         self.analysis_type = self.analysis_type_config.analysis_type
+        # if self.dimensionality == Dimensionality.THREE_DIMENSIONAL:
+        #     self.antenna_config.horn_height = 0
+        #     self.antenna_config.top_bottom_thickness = 0
+        #     self.antenna_config.wire_thickness = 0
 
 
 @dataclass

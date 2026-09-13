@@ -9,8 +9,8 @@ from vswr_analysis import VSWRAnalysis
 
 # ====== INPUTS =======
 
-config = ac.ANALYSIS_CONFIG_HORN_VSWR
-output_folder = "analysis1"  # name of output folder, must change if folder already exists and you don't want results overwritten
+config = ac.ANALYSIS_CONFIG_HORN_RAD_PATTERN
+output_folder = "analysis2"  # name of output folder, must change if folder already exists and you don't want results overwritten
 lab_data_file = None  # .dat file in lab_data folder containing lab data to plot against. optional input, put None if ignoring
 use_existing_outputs = False  # True if using results from already ran simulation in output folder, False if want to rerun
 max_parallelization = None  # Maximum number of simulations that will be ran at once. Put None to use default value of number of CPU logical processes -1

@@ -1,3 +1,4 @@
+import math
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -14,9 +15,10 @@ from models import (
     VSWRResults,
 )
 from rf_horn import RFHorn
-from utilities import plot_surfaces, resolve_output_folder
+from utilities import resolve_output_folder
 
 ANTENNA_CLASSES = {AntennaType.RF_HORN: RFHorn}
+CELL_PADDING = 20
 
 
 class Analysis(ABC):
@@ -31,6 +33,8 @@ class Analysis(ABC):
         self.antenna_config = analysis_config.antenna_config
         self.max_parallelization = max_parallelization
 
+        self.x_centering_adjustment: float | None = None
+        self.y_centering_adjustment: float | None = None
         self.output_folder: Path | None = None
         self.antennas: list[Antenna] | None = None
         self.geometry: list[mp.GeometricObject] | None = None
@@ -44,7 +48,20 @@ class Analysis(ABC):
         output_folder_path.mkdir(exist_ok=True)
         self.output_folder = output_folder_path
 
-    def _create_antennas(self):
+    def _get_centering_adjustment(self) -> None:
+        vertices = [vertice for prism in self.geometry for vertice in prism.vertices]
+        x = [vertice.x for vertice in vertices]
+        center_x = (max(x) + min(x)) / 2
+        y = [vertice.y for vertice in vertices]
+        center_y = (max(y) + min(y)) / 2
+
+        self.x_centering_adjustment = 0 - center_x
+        self.y_centering_adjustment = 0 - center_y
+
+    def _create_antennas(
+        self,
+        only_cable: bool = False,
+    ) -> None:
         self.antennas = []
         self.geometry = []
         if self.analysis_config.analysis_type == AnalysisType.RAD_PATTERN:
@@ -55,6 +72,13 @@ class Analysis(ABC):
             num_antenna = 1
             x_offset = 0
             y_offset = 0
+
+        x_centering_adjustment = self.x_centering_adjustment
+        y_centering_adjustment = self.y_centering_adjustment
+        if x_centering_adjustment is None:
+            x_centering_adjustment = 0.0
+        if y_centering_adjustment is None:
+            y_centering_adjustment = 0.0
 
         # TODO: make it so it can create copies of the antenna and shift over
         # instead of creating whole new antenna every time?
@@ -67,20 +91,44 @@ class Analysis(ABC):
             antenna.set_geometry(
                 x_offset=x_offset * i,
                 y_offset=y_offset * i,
+                only_cable=only_cable,
+                x_centering_adjustment=x_centering_adjustment,
+                y_centering_adjustment=y_centering_adjustment,
             )
             self.geometry.extend(antenna.geometry)
+
+    def _get_cell_dimensions(self) -> tuple[int, int, int]:
+        self._create_antennas(only_cable=False)
+        self._get_centering_adjustment()
+
+        # now recreate them properly centered
+        self._create_antennas(only_cable=False)
+
+        vertices = [vertice for prism in self.geometry for vertice in prism.vertices]
+        x_dim = (
+            math.ceil(max([abs(vertice.x) for vertice in vertices]) + CELL_PADDING) * 2
+        )
+        y_dim = (
+            math.ceil(max([abs(vertice.y) for vertice in vertices]) + CELL_PADDING) * 2
+        )
+        if self.analysis_config.dimensionality == Dimensionality.THREE_DIMENSIONAL:
+            z_dim = (
+                math.ceil(max([abs(vertice.z) for vertice in vertices]) + CELL_PADDING)
+                * 2
+            )
+        else:
+            z_dim = 0
+        return x_dim, y_dim, z_dim
 
     @abstractmethod
     def _get_sources(self, **kwargs) -> list[mp.Source]:
         pass
 
     def setup_sim(self, **kwargs) -> mp.Simulation:
+        x_dim, y_dim, z_dim = self._get_cell_dimensions()
+        cell_size = mp.Vector3(x_dim, y_dim, z_dim)
+        
         sources = self._get_sources(**kwargs)
-
-        if self.analysis_config.dimensionality == Dimensionality.TWO_DIMENSIONAL:
-            cell_size = mp.Vector3(60, 60, 0)
-        elif self.analysis_config.dimensionality == Dimensionality.THREE_DIMENSIONAL:
-            cell_size = mp.Vector3(60, 60, 60)
 
         sim = mp.Simulation(
             resolution=self.analysis_config.resolution,
@@ -89,8 +137,6 @@ class Analysis(ABC):
             sources=sources,
             geometry=self.geometry,
         )
-        if self.analysis_config.dimensionality == Dimensionality.TWO_DIMENSIONAL:
-            plot_surfaces(sim=sim, output_folder=self.output_folder)
         return sim
 
     @abstractmethod

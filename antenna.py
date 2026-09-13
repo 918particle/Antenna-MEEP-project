@@ -15,7 +15,7 @@ class Antenna(ABC):
         self.dimensionality: Dimensionality = analysis_config.dimensionality
 
         self.geometry: list[mp.GeometricObject] | None = None
-        self.conductors: list[mp.GeometricObject] | None = None
+        self.conductor: list[mp.GeometricObject] | None = None
         self.dielectric: list[mp.GeometricObject] | None = None
         self.base_source: mp.Source | None = None
         self.sweep_source: mp.Source | None = None
@@ -44,19 +44,30 @@ class Antenna(ABC):
     def _set_geometry_vswr(self) -> None:
         pass
 
+    @abstractmethod
+    def _set_geometry_vswr_only_cable(self) -> None:
+        pass
+
     def set_geometry(
         self,
         x_offset: float = 0.0,
         y_offset: float = 0.0,
+        only_cable: bool = False,
+        x_centering_adjustment = 0.0,
+        y_centering_adjustment = 0.0,
     ) -> None:
         self.geometry = []
 
         if self.analysis_type_config.analysis_type == AnalysisType.RAD_PATTERN:
             self._set_geometry_rad_pattern()
         elif self.analysis_type_config.analysis_type == AnalysisType.VSWR:
-            self._set_geometry_vswr()
+            if only_cable:
+                self._set_geometry_vswr_only_cable()
+            else:
+                self._set_geometry_vswr()
 
         self._shift_antenna(x_offset=x_offset, y_offset=y_offset)
+        self._shift_antenna(x_offset=x_centering_adjustment, y_offset=y_centering_adjustment)
 
     @abstractmethod
     def _set_source_rad_pattern(
