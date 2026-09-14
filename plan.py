@@ -1,6 +1,7 @@
 import meep as mp
 import numpy as np
 import utility
+import h5py
 
 gdsII_file = 'test.gds'
 gdsII_file_2 = 'no_horn.gds'
@@ -26,7 +27,6 @@ def Plan(resolution,frequency,sigma,mu,radPattern_or_vswr,E_or_H_Plane):
         bottom = mp.get_GDSII_prisms(mp.metal,gdsII_file,TOP_LAYER,-t_1,-t_2)
         top = mp.get_GDSII_prisms(mp.metal,gdsII_file,TOP_LAYER,t_2,t_1)
         geometry = back+sides+top+bottom
-        #geometry = sides+back
         sources = []
         src_vol = mp.GDSII_vol(gdsII_file,SOURCE_LAYER,-t_3,t_3)
         sources.append(mp.Source(mp.CustomSource(src_func=utility.cw_f(frequency,0.0),start_time=0.0),component=mp.Ey,volume=src_vol,amplitude=1))
@@ -38,13 +38,15 @@ def Plan(resolution,frequency,sigma,mu,radPattern_or_vswr,E_or_H_Plane):
     else:
         dpml = 5
         time_steps = 115
+        electrifi = mp.Medium(epsilon=1, D_conductivity=3.77e4)
+        cable_dielectric = mp.Medium(epsilon=2.0,D_conductivity=0.0251)
         wire = mp.get_GDSII_prisms(mp.metal,gdsII_file_2,WIRE_LAYER,-t_3,t_3)
         conductors = mp.get_GDSII_prisms(mp.metal,gdsII_file_2,COND_LAYER,-t_1,t_1)
         t_conductor = mp.get_GDSII_prisms(mp.metal,gdsII_file_2,COND_LAYER_2,t_2,t_1)
         b_conductor = mp.get_GDSII_prisms(mp.metal,gdsII_file_2,COND_LAYER_2,-t_1,-t_2)
-        dielectric = mp.get_GDSII_prisms(mp.Medium(epsilon=2),gdsII_file_2,DIEL_LAYER,-t_2,t_2)
-        t_dielectric = mp.get_GDSII_prisms(mp.Medium(epsilon=2),gdsII_file_2,DIEL_LAYER_2,t_3,t_2)
-        b_dielectric = mp.get_GDSII_prisms(mp.Medium(epsilon=2),gdsII_file_2,DIEL_LAYER_2,-t_2,-t_3)
+        dielectric = mp.get_GDSII_prisms(cable_dielectric,gdsII_file_2,DIEL_LAYER,-t_2,t_2)
+        t_dielectric = mp.get_GDSII_prisms(cable_dielectric,gdsII_file_2,DIEL_LAYER_2,t_3,t_2)
+        b_dielectric = mp.get_GDSII_prisms(cable_dielectric,gdsII_file_2,DIEL_LAYER_2,-t_2,-t_3)
         geometry = []
         geometry = wire+conductors+t_conductor+b_conductor+dielectric+t_dielectric+b_dielectric
         sources = []
@@ -61,19 +63,18 @@ def Plan(resolution,frequency,sigma,mu,radPattern_or_vswr,E_or_H_Plane):
         conductors = mp.get_GDSII_prisms(mp.metal,gdsII_file,COND_LAYER,-t_1,t_1)
         t_conductor = mp.get_GDSII_prisms(mp.metal,gdsII_file,COND_LAYER_2,t_2,t_1)
         b_conductor = mp.get_GDSII_prisms(mp.metal,gdsII_file,COND_LAYER_2,-t_1,-t_2)
-        dielectric = mp.get_GDSII_prisms(mp.Medium(epsilon=2),gdsII_file,DIEL_LAYER,-t_2,t_2)
-        t_dielectric = mp.get_GDSII_prisms(mp.Medium(epsilon=2),gdsII_file,DIEL_LAYER_2,t_3,t_2)
-        b_dielectric = mp.get_GDSII_prisms(mp.Medium(epsilon=2),gdsII_file,DIEL_LAYER_2,-t_2,-t_3)
-        sides = mp.get_GDSII_prisms(mp.metal,gdsII_file,HORN_LAYER,-t_1,t_1)
-        top = mp.get_GDSII_prisms(mp.metal,gdsII_file,TOP_LAYER,t_2,t_1)
-        bottom = mp.get_GDSII_prisms(mp.metal,gdsII_file,TOP_LAYER,-t_1,-t_2)
+        dielectric = mp.get_GDSII_prisms(cable_dielectric,gdsII_file,DIEL_LAYER,-t_2,t_2)
+        t_dielectric = mp.get_GDSII_prisms(cable_dielectric,gdsII_file,DIEL_LAYER_2,t_3,t_2)
+        b_dielectric = mp.get_GDSII_prisms(cable_dielectric,gdsII_file,DIEL_LAYER_2,-t_2,-t_3)
+        sides = mp.get_GDSII_prisms(electrifi,gdsII_file,HORN_LAYER,-t_1,t_1)
+        top = mp.get_GDSII_prisms(electrifi,gdsII_file,TOP_LAYER,t_2,t_1)
+        bottom = mp.get_GDSII_prisms(electrifi,gdsII_file,TOP_LAYER,-t_1,-t_2)
         geometry = []
         geometry = wire+conductors+t_conductor+b_conductor
         geometry = geometry+dielectric+t_dielectric+b_dielectric+sides+top+bottom
         sim = mp.Simulation(resolution=resolution,cell_size=mp.Vector3(68,68,30),boundary_layers=[mp.PML(dpml)],sources=sources,geometry=geometry)
         flux_monitor = utility.make_flux_region(0,11.0,1.0,3.5,sim)
         sim.load_minus_flux_data(flux_monitor,normalization_run)
-        #sim.run(mp.to_appended("ex",mp.at_every(1, mp.output_efield_x)),until=time_steps)
         sim.run(until=time_steps)
         reflection_flux = mp.get_fluxes(flux_monitor)
         flux_frequencies = mp.get_flux_freqs(flux_monitor)
