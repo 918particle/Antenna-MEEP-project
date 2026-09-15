@@ -5,8 +5,8 @@ def main():
     resolution = 10
     sigma = 0.25
     mu = 1
-    cw_frequency = 0.2
-    rad_or_vswr = 0
+    cw_frequency = 0.3
+    rad_or_vswr = 1
     e_or_h_plane = 1
     Plan(resolution,cw_frequency,sigma,mu,rad_or_vswr,e_or_h_plane)
 
