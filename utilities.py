@@ -106,6 +106,7 @@ def plot_radiation_pattern(
     if not isinstance(sim_results, RadPatternResults):
         sim_results = _load_sim_rad_results_from_csv(sim_results)
 
+    plt.rcParams['font.family'] = 'monospace'
     for i, frequency in enumerate(sim_results.frequencies):
         frequency = f"{frequency:.4f}"
         fig = plt.figure(dpi=300)
@@ -149,6 +150,7 @@ def plot_vswr(
     if not isinstance(sim_results, VSWRResults):
         sim_results = _load_sim_vswr_results_from_csv(sim_results)
 
+    plt.rcParams['font.family'] = 'monospace'
     plt.figure(dpi=300)
     plt.plot(
         sim_results.frequencies,
@@ -157,12 +159,9 @@ def plot_vswr(
         linewidth=2,
         label="MEEP sim",
     )
-    # plt.xlim(0, 20)
-    # plt.ylim(0, 10)
-    # plt.xticks(np.arange(0, 21, 2), fontsize=20)
-    # plt.yticks(np.arange(0, 11, 2), fontsize=20)
-    plt.xlabel("Frequency", fontsize=20)
-    plt.ylabel("VSWR", fontsize=20)
+    plt.ylim(0, 10)
+    plt.xlabel("Frequency")
+    plt.ylabel("VSWR")
 
     if lab_data_file:
         if not Path(lab_data_file).exists():
@@ -181,6 +180,7 @@ def plot_vswr(
 def plot_surfaces(sim: mp.Simulation, output_folder: Path | str, file_name: str = "surfaces"):
     file_name = file_name.split(".")[0]
     output_folder = resolve_output_folder(output_folder)
+    plt.rcParams['font.family'] = 'monospace'
     f = plt.figure(dpi=300)
     sim.plot2D(ax=f.gca())
     file_name = Path(output_folder) / f"{file_name}.png"
