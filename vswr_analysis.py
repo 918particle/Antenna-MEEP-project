@@ -150,7 +150,7 @@ class VSWRAnalysis(Analysis):
         reflection_flux = mp.get_fluxes(flux_monitor)
         flux_frequencies = mp.get_flux_freqs(flux_monitor)
 
-        frequencies = np.array(flux_frequencies) * 30
+        frequencies = np.array(flux_frequencies)
         gamma = np.abs(np.divide(reflection_flux, normalization_flux))
         vswr = (1 + gamma) / (1 - gamma)
         df = pd.DataFrame(

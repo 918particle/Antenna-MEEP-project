@@ -11,6 +11,57 @@ import pandas as pd
 from models import RadPatternResults, VSWRResults
 
 
+def frequency_meep2ghz(meep_freq: float | list[float]) -> float | list[float]:
+    """Converts singular or list of MEEP frequencies into GHz.
+
+    Args:
+        meep_freq (float | list[float]): Singular MEEP frequency or list of MEEP frequencies.
+
+    Returns:
+        float | list[float]: Singular frequency in GHz or list of frequencies in GHz, same type as input.
+
+    Note:
+        f_real = f_meep * c/a, a = characteristic length
+
+    References:
+        https://meep.readthedocs.io/en/latest/Introduction/#units-in-meep
+        https://www.learnelectricalengineering.com/computational_em/lesson1_2.php
+
+    """
+    c = 30  # cm/ns
+    a = 1  # cm
+
+    if isinstance(meep_freq, float):
+        return meep_freq * c / a
+
+    return [freq * c / a for freq in meep_freq]
+
+
+def frequency_ghz2meep(freq_ghz: float | list[float]) -> float | list[float]:
+    """Converts singular or list of frequnecies in GHz to MEEP frequencies.
+
+    Args:
+        freq_ghz (float | list[float]): Singular frequency or list of frequencies, all in GHz.
+
+    Returns:
+        float | list[float]: Singular frequency in MEEP units or list of frequencies in MEEP units, same type as input.
+
+    Note:
+        f_meep = f_real * a/c, a = characteristic length
+
+    References:
+        https://meep.readthedocs.io/en/latest/Introduction/#units-in-meep
+        https://www.learnelectricalengineering.com/computational_em/lesson1_2.php
+    """
+    a = 1  # cm
+    c = 30  # cm/ns
+
+    if isinstance(freq_ghz, float):
+        return freq_ghz * a / c
+
+    return [freq * a / c for freq in freq_ghz]
+
+
 def _load_sim_rad_results_from_csv(results_file: Path | str) -> RadPatternResults:
     results_file = Path(results_file).resolve()
     if not results_file.suffix:
@@ -79,7 +130,7 @@ def resolve_output_folder(output_folder: Path | str) -> Path:
     return results_dir / output_folder.name
 
 
-def filter_kwargs(func: Callable, kwargs: dict)-> dict[str, Any]:
+def filter_kwargs(func: Callable, kwargs: dict) -> dict[str, Any]:
     """Filter kwargs to just what a certain function has as inputs. So you don't break stuff by passing in invalid params :)
 
     Args:
@@ -91,11 +142,8 @@ def filter_kwargs(func: Callable, kwargs: dict)-> dict[str, Any]:
     """
     sig = inspect.signature(func)
 
-    return {
-        key: value
-        for key, value in kwargs.items()
-        if key in sig.parameters
-    }
+    return {key: value for key, value in kwargs.items() if key in sig.parameters}
+
 
 def plot_radiation_pattern(
     sim_results: RadPatternResults | Path | str,
@@ -106,21 +154,21 @@ def plot_radiation_pattern(
     if not isinstance(sim_results, RadPatternResults):
         sim_results = _load_sim_rad_results_from_csv(sim_results)
 
-    plt.rcParams['font.family'] = 'monospace'
-    for i, frequency in enumerate(sim_results.frequencies):
+    plt.rcParams["font.family"] = "monospace"
+    for i, frequency in enumerate(frequency_meep2ghz(sim_results.frequencies)):
         frequency = f"{frequency:.4f}"
         fig = plt.figure(dpi=300)
         plt.polar(
             sim_results.angles,
             sim_results.sweep_directivity[i],
             color="black",
-            label=f"simulation-{frequency}",
+            label=f"sim-{frequency}_GHz",
         )
         plt.polar(
             sim_results.angles,
             sim_results.base_directivity[i],
             color="blue",
-            label=f"simulation-base-{sim_results.steering_beam_base_frequency}",
+            label=f"sim-base-{frequency_meep2ghz(sim_results.steering_beam_base_frequency)}_GHz",
         )
         if lab_data_file:
             if not Path(lab_data_file).exists():
@@ -132,7 +180,7 @@ def plot_radiation_pattern(
         ax.set_rlim(-26, 1)
         ax.set_rticks([-15, -3])
         ax.grid(True)
-        ax.set_rlabel_position(180)
+        ax.set_rlabel_position(0)
         ax.tick_params(labelsize=18)
         plt.legend(bbox_to_anchor=(1, 1.02), loc="upper left")
 
@@ -150,17 +198,17 @@ def plot_vswr(
     if not isinstance(sim_results, VSWRResults):
         sim_results = _load_sim_vswr_results_from_csv(sim_results)
 
-    plt.rcParams['font.family'] = 'monospace'
+    plt.rcParams["font.family"] = "monospace"
     plt.figure(dpi=300)
     plt.plot(
-        sim_results.frequencies,
+        frequency_meep2ghz(sim_results.frequencies),
         sim_results.vswr,
         color="black",
         linewidth=2,
         label="MEEP sim",
     )
     plt.ylim(0, 10)
-    plt.xlabel("Frequency")
+    plt.xlabel("Frequency (GHz)")
     plt.ylabel("VSWR")
 
     if lab_data_file:
@@ -168,7 +216,7 @@ def plot_vswr(
             lab_data_file = Path("lab_data") / lab_data_file
         lab_frequencies, _, lab_vswr = np.loadtxt(lab_data_file, unpack=True)
         plt.plot(
-            lab_frequencies, lab_vswr, "o", color="black", linewidth=2, label="Lab data"
+            lab_frequencies, lab_vswr, "o", color="black", linewidth=0.5, label="Lab data"
         )
     plt.legend(bbox_to_anchor=(1, 1.02), loc="upper left")
 
@@ -177,10 +225,12 @@ def plot_vswr(
     plt.close()
 
 
-def plot_surfaces(sim: mp.Simulation, output_folder: Path | str, file_name: str = "surfaces"):
+def plot_surfaces(
+    sim: mp.Simulation, output_folder: Path | str, file_name: str = "surfaces"
+):
     file_name = file_name.split(".")[0]
     output_folder = resolve_output_folder(output_folder)
-    plt.rcParams['font.family'] = 'monospace'
+    plt.rcParams["font.family"] = "monospace"
     f = plt.figure(dpi=300)
     sim.plot2D(ax=f.gca())
     file_name = Path(output_folder) / f"{file_name}.png"

@@ -1,4 +1,12 @@
 from models import Plane, RadPatternAnalysisConfig
+from utilities import frequency_ghz2meep
+
+"""
+If you want to enter any of the frequencies in GHz, use the frequency_ghz2meep function
+Ex: steering_beam_base_frequency = frequency_ghz2meep(3)
+
+"""
+
 
 ANALYSIS_CONFIG_1HORN = RadPatternAnalysisConfig(
     steering_beam_base_frequency=0.1,

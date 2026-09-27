@@ -183,10 +183,6 @@ class AnalysisConfig:
 
     def __post_init__(self):
         self.analysis_type = self.analysis_type_config.analysis_type
-        # if self.dimensionality == Dimensionality.THREE_DIMENSIONAL:
-        #     self.antenna_config.horn_height = 0
-        #     self.antenna_config.top_bottom_thickness = 0
-        #     self.antenna_config.wire_thickness = 0
 
 
 @dataclass
@@ -202,12 +198,14 @@ class RadPatternResults:
                                     frequencies[i] and angles[j]. Units: dBi.
         df (pd.DataFrame): Results stored as a Pandas DataFrame.
     """
+
     steering_beam_base_frequency: float
     frequencies: NDArray[np.float32]
     angles: NDArray[np.float32]
     base_directivity: NDArray[np.float64]
     sweep_directivity: NDArray[np.float64]
     df: pd.DataFrame
+
 
 @dataclass
 class VSWRResults:
@@ -219,6 +217,7 @@ class VSWRResults:
         vswr (NDArray[np.float64]): Voltage standing wave ratio. 1D array.
         df (pd.DataFrame): Results stored as a Pandas DataFrame.
     """
+
     frequencies: NDArray[np.float64]
     gamma: NDArray[np.float64]
     vswr: NDArray[np.float64]
