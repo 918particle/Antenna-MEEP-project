@@ -77,7 +77,7 @@ class AntennaConfig:
     Attributes:
         antenna_type (AntennaType): Type of antenna. Currently just RF Horn but options will be added at a later time.
         gdsii_file_config (GDSIIFileConfigHorn): Config for GDSII file of antenna.
-        horn_height (float): Height of antenna in z direction.
+        antenna_height (float): Total height of antenna in z direction.
         top_bottom_thickness (float): Thickness of top and bottom faces of antenna in z direction.
         wire_thickness (float): Thickness of wire in z direction.
     """
@@ -85,7 +85,7 @@ class AntennaConfig:
     antenna_type: AntennaType
     # TODO: when new antenna types are added, add other GDSII file config types to typehint
     gdsii_file_config: GDSIIFileConfigHorn
-    horn_height: float
+    antenna_height: float
     top_bottom_thickness: float
     wire_thickness: float
 

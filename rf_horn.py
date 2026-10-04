@@ -13,8 +13,8 @@ class RFHorn(Antenna):
             material=mp.metal,
             GDSIIFile=str(self._file_config.file_path),
             Layer=self._file_config.horn_top_layer,
-            zmin=-self.antenna_config.horn_height / 2,
-            zmax=-self.antenna_config.horn_height / 2
+            zmin=-self.antenna_config.antenna_height / 2,
+            zmax=-self.antenna_config.antenna_height / 2
             + self.antenna_config.top_bottom_thickness,
         )
         self.geometry.extend(bottom)
@@ -22,9 +22,9 @@ class RFHorn(Antenna):
             material=mp.metal,
             GDSIIFile=str(self._file_config.file_path),
             Layer=self._file_config.horn_top_layer,
-            zmin=self.antenna_config.horn_height / 2
+            zmin=self.antenna_config.antenna_height / 2
             - self.antenna_config.top_bottom_thickness,
-            zmax=self.antenna_config.horn_height / 2,
+            zmax=self.antenna_config.antenna_height / 2,
         )
         self.geometry.extend(top)
 
@@ -33,8 +33,8 @@ class RFHorn(Antenna):
             material=mp.metal,
             GDSIIFile=str(self._file_config.file_path),
             Layer=self._file_config.horn_sides_layer,
-            zmin=-self.antenna_config.horn_height / 2,
-            zmax=self.antenna_config.horn_height / 2,
+            zmin=-self.antenna_config.antenna_height / 2,
+            zmax=self.antenna_config.antenna_height / 2,
         )
         self.geometry.extend(sides)
 
@@ -44,8 +44,8 @@ class RFHorn(Antenna):
             material=mp.metal,
             GDSIIFile=str(self._file_config.file_path),
             Layer=self._file_config.back_plug_layer,
-            zmin=-self.antenna_config.horn_height / 2,
-            zmax=self.antenna_config.horn_height / 2,
+            zmin=-self.antenna_config.antenna_height / 2,
+            zmax=self.antenna_config.antenna_height / 2,
         )
         self.geometry.extend(back)
 
@@ -66,8 +66,8 @@ class RFHorn(Antenna):
             material=mp.metal,
             GDSIIFile=str(self._file_config.file_path),
             Layer=self._file_config.main_conductive_layer,
-            zmin=-self.antenna_config.horn_height / 2,
-            zmax=self.antenna_config.horn_height / 2,
+            zmin=-self.antenna_config.antenna_height / 2,
+            zmax=self.antenna_config.antenna_height / 2,
         )
         self.conductor = main_conductor
         self.geometry.extend(main_conductor)
@@ -76,9 +76,9 @@ class RFHorn(Antenna):
             material=mp.Medium(epsilon=2),
             GDSIIFile=str(self._file_config.file_path),
             Layer=self._file_config.main_dielectric_layer,
-            zmin=-self.antenna_config.horn_height / 2
+            zmin=-self.antenna_config.antenna_height / 2
             + self.antenna_config.top_bottom_thickness,
-            zmax=self.antenna_config.horn_height / 2
+            zmax=self.antenna_config.antenna_height / 2
             - self.antenna_config.top_bottom_thickness,
         )
         self.dielectric = main_dielectric
@@ -89,8 +89,8 @@ class RFHorn(Antenna):
                 material=mp.metal,
                 GDSIIFile=str(self._file_config.file_path),
                 Layer=self._file_config.top_bottom_conductive_layer,
-                zmin=-self.antenna_config.horn_height / 2,
-                zmax=-self.antenna_config.horn_height / 2
+                zmin=-self.antenna_config.antenna_height / 2,
+                zmax=-self.antenna_config.antenna_height / 2
                 + self.antenna_config.top_bottom_thickness,
             )
             self.geometry.extend(top_conductor)
@@ -99,9 +99,9 @@ class RFHorn(Antenna):
                 material=mp.metal,
                 GDSIIFile=str(self._file_config.file_path),
                 Layer=self._file_config.top_bottom_conductive_layer,
-                zmin=self.antenna_config.horn_height / 2
+                zmin=self.antenna_config.antenna_height / 2
                 - self.antenna_config.top_bottom_thickness,
-                zmax=self.antenna_config.horn_height / 2,
+                zmax=self.antenna_config.antenna_height / 2,
             )
             self.geometry.extend(bottom_conductor)
 
@@ -110,7 +110,7 @@ class RFHorn(Antenna):
                 GDSIIFile=str(self._file_config.file_path),
                 Layer=self._file_config.top_bottom_dielectric_layer,
                 zmin=self.antenna_config.wire_thickness,
-                zmax=self.antenna_config.horn_height / 2
+                zmax=self.antenna_config.antenna_height / 2
                 - self.antenna_config.top_bottom_thickness,
             )
             self.geometry.extend(top_dielectric)
@@ -119,7 +119,7 @@ class RFHorn(Antenna):
                 material=mp.Medium(epsilon=2),
                 GDSIIFile=str(self._file_config.file_path),
                 Layer=self._file_config.top_bottom_dielectric_layer,
-                zmin=-self.antenna_config.horn_height / 2
+                zmin=-self.antenna_config.antenna_height / 2
                 + self.antenna_config.top_bottom_thickness,
                 zmax=-self.antenna_config.wire_thickness,
             )
