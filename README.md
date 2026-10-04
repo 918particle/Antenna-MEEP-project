@@ -1,4 +1,26 @@
-## Configs
+# How to Run the Code! 🏃
+To run anything, you run the file run_analysis.py.
+
+There is an area of that file that is specifically labeled "INPUTS". That is the only area you should need to touch.
+
+## Instructions
+- Set 'config' equal to the AnalysisConfig you want to run. (See section below on configs)
+- Set 'output_folder' equal to the name of the folder you'd like your results in.
+  - The folder will be a subfolder in ~/results/
+  - Note that if you use a folder name that already exists in ~/results/, if you are running the same type of analysis as the outputs already in that folder (i.e. another radiation pattern analysis) then the results will be overwritten in that folder.
+  - Note that in the ~/results/ folder there is a .gitignore file. This makes it so git ignores the contents of the folder, so there isn't a whole bunch of everyone's scratch work on the repo. You will notice this when you run 'git status' and see that nothing inside the results folder shows up.
+- Set 'lab_data_file' to either None or the name of the .dat file in the ~/lab_data/ folder containing the lab data results you want to plot your simulation results against.
+  - Put None if you only want to plot the simulation results.
+- Set 'use_existing_outputs' to either True or False.
+  - The purpose of this is for if you've already ran a simulation and just want to replot it, for instance against some different lab data. When you run an analysis, it saves the output as a csv file in the output folder.
+  - True means use the output file that already lives in the output_folder specified.
+  - False means run the simulation. You *must* put False if you have not previously ran the analysis/there is not a *_results.csv file for your simulation type in the output_folder you specified.
+- Set 'max_parallelization' to None or an integer.
+  - This is the maximum number of simulations that will be ran at once.
+  - Set it to None if you want to use the default value which is one less than the number of CPU logical processes on the computer you running on (so your computer if running it locally or the computer you are SSHd into).
+
+
+# Configs
 The parameters for a run all live in "config" files. You can view these in the "configs" folder.
 
 The purpose of these configs is so that it is straightforward to have multiple combinations of parameters saved. 
@@ -27,23 +49,3 @@ Now for what all the configs are.
 
 For all configs, add on another if you need something different, or change an existing one if you know the current version is no longer needed (i.e. you are tuning the parameters).
 
-## How to run it
-To run anything, you run the file run_analysis.py.
-
-There is an area of that file that is specifically labeled "INPUTS". That is the only area you should need to touch.
-
-### Instructions
-- Set 'config' equal to the AnalysisConfig you want to run.
-- Set 'output_folder' equal to the name of the folder you'd like your results in.
-  - The folder will be a subfolder in ~/results/
-  - Note that if you use a folder name that already exists in ~/results/, if you are running the same type of analysis as the outputs already in that folder (i.e. another radiation pattern analysis) then the results will be overwritten in that folder.
-  - Note that in the ~/results/ folder there is a .gitignore file. This makes it so git ignores the contents of the folder, so there isn't a whole bunch of everyone's scratch work on the repo. You will notice this when you run 'git status' and see that nothing inside the results folder shows up.
-- Set 'lab_data_file' to either None or the name of the .dat file in the ~/lab_data/ folder containing the lab data results you want to plot your simulation results against.
-  - Put None if you only want to plot the simulation results.
-- Set 'use_existing_outputs' to either True or False.
-  - The purpose of this is for if you've already ran a simulation and just want to replot it, for instance against some different lab data. When you run an analysis, it saves the output as a csv file in the output folder.
-  - True means use the output file that already lives in the output_folder specified.
-  - False means run the simulation. You *must* put False if you have not previously ran the analysis/there is not a *_results.csv file for your simulation type in the output_folder you specified.
-- Set 'max_parallelization' to None or an integer.
-  - This is the maximum number of simulations that will be ran at once.
-  - Set it to None if you want to use the default value which is one less than the number of CPU logical processes on the computer you running on (so your computer if running it locally or the computer you are SSHd into).
