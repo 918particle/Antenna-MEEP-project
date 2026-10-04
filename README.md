@@ -2,6 +2,7 @@
 To run anything, you run the file run_analysis.py.
 
 There is an area of that file that is specifically labeled "INPUTS". That is the only area you should need to touch.
+<img width="1222" height="183" alt="image" src="https://github.com/user-attachments/assets/73933c4a-1b4d-4686-84d5-ac3ff07dc290" />
 
 ## Instructions
 - Set 'config' equal to the AnalysisConfig you want to run. (See section below on configs)
@@ -23,9 +24,17 @@ There is an area of that file that is specifically labeled "INPUTS". That is the
 # Configs
 The parameters for a run all live in "config" files. You can view these in the "configs" folder.
 
+<img width="240" height="135" alt="image" src="https://github.com/user-attachments/assets/903838f6-b66f-4451-8b31-17a17ea1a825" />
+<br>
+<br>
+
 The purpose of these configs is so that it is straightforward to have multiple combinations of parameters saved. 
 
 For instance, lets say I frequently run a 3D 5-horn radiation pattern analysis. I also frequently run a 2D 1-horn radiation pattern analysis. Instead of needing to remember all of the different parameters for both analyses and having to retype them in every time I'm changing back and forth, I create two configs, ex: ANALYSIS_CONFIG_5HORN_3D and ANALYSIS_CONFIG_1HORN_2D. 
+
+<img width="459" height="345" alt="image" src="https://github.com/user-attachments/assets/8b006ff2-2fa7-46fd-9cae-239cc05bd5c2" /><br>*Here I have a few different configs for some different analyses* 
+<br>
+<br>
 
 Now when I want to run one of those, I can just type in the name of the config and it contains all of the associated parameters. Another bonus is then when you commit the configs to the repository, other people can easily see and use the same parameters you ran.
 
