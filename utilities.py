@@ -115,9 +115,9 @@ def _load_sim_vswr_results_from_csv(results_file: Path | str) -> VSWRResults:
     df = pd.read_csv(results_file)
 
     return VSWRResults(
-        frequencies=df["frequency"].to_numpy(),
+        frequencies=df["frequencies"].to_numpy(),
         gamma=df["gamma"].to_numpy(),
-        vswr=df["vswr"].to_numpy,
+        vswr=df["vswr"].to_numpy(),
         df=df,
     )
 
@@ -175,7 +175,7 @@ def plot_radiation_pattern(
                 lab_data_file = Path("lab_data") / lab_data_file
             lab_angles, lab_directivity = np.loadtxt(lab_data_file, unpack=True)
             lab_angles *= np.pi / 180.0
-            plt.polar(lab_angles, lab_directivity, "o", color="black", label="lab")
+            plt.polar(lab_angles, lab_directivity, "o", markerfacecolor='none', markeredgecolor='black', label="lab")
         ax = fig.gca()
         ax.set_rlim(-26, 1)
         ax.set_rticks([-15, -3])
@@ -207,18 +207,22 @@ def plot_vswr(
         linewidth=2,
         label="MEEP sim",
     )
-    plt.ylim(0, 10)
-    plt.xlabel("Frequency (GHz)")
-    plt.ylabel("VSWR")
 
     if lab_data_file:
-        if not Path(lab_data_file).exists():
+        lab_data_file = Path(lab_data_file)
+        if not lab_data_file.exists():
             lab_data_file = Path("lab_data") / lab_data_file
+        if not lab_data_file.suffix:
+            lab_data_file = lab_data_file.with_suffix(".dat")
         lab_frequencies, _, lab_vswr = np.loadtxt(lab_data_file, unpack=True)
         plt.plot(
-            lab_frequencies, lab_vswr, "o", color="black", linewidth=0.5, label="Lab data"
+            lab_frequencies, lab_vswr, "o", markerfacecolor='none', markeredgecolor='blue', linewidth=0.5, label="Lab data"
         )
     plt.legend(bbox_to_anchor=(1, 1.02), loc="upper left")
+    plt.xlim(0, 18)
+    plt.ylim(0, 18)
+    plt.xlabel("Frequency (GHz)")
+    plt.ylabel("VSWR")
 
     file_name = Path(output_folder) / "vswr"
     plt.savefig(file_name, bbox_inches="tight")
