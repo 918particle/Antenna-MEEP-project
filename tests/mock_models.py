@@ -44,8 +44,13 @@ MOCK_ANALYSIS_CONFIG_2D = mds.AnalysisConfig(
     dimensionality=mds.Dimensionality.TWO_DIMENSIONAL,
     analysis_type_config=MagicMock()
 )
+MOCK_ANALYSIS_CONFIG_2D.antenna_config.antenna_type = mds.AntennaType.RF_HORN
+MOCK_ANALYSIS_CONFIG_2D.antenna_config.gdsii_file_config = MagicMock()
+
 MOCK_ANALYSIS_CONFIG_RAD_2D = copy.copy(MOCK_ANALYSIS_CONFIG_2D)
 MOCK_ANALYSIS_CONFIG_RAD_2D.analysis_type = mds.AnalysisType.RAD_PATTERN
+MOCK_ANALYSIS_CONFIG_VSWR_2D = copy.copy(MOCK_ANALYSIS_CONFIG_2D)
+MOCK_ANALYSIS_CONFIG_VSWR_2D.analysis_type = mds.AnalysisType.VSWR
 
 MOCK_ANALYSIS_CONFIG_3D = mds.AnalysisConfig(
     antenna_config=MagicMock(spec=mds.AntennaConfig),
@@ -53,5 +58,8 @@ MOCK_ANALYSIS_CONFIG_3D = mds.AnalysisConfig(
     dimensionality=mds.Dimensionality.THREE_DIMENSIONAL,
     analysis_type_config=MagicMock()
 )
+MOCK_ANALYSIS_CONFIG_3D.antenna_config.antenna_type = mds.AntennaType.RF_HORN
+MOCK_ANALYSIS_CONFIG_3D.antenna_config.gdsii_file_config = MagicMock()
+
 MOCK_ANALYSIS_CONFIG_RAD_3D = copy.copy(MOCK_ANALYSIS_CONFIG_3D)
 MOCK_ANALYSIS_CONFIG_RAD_3D.analysis_type = mds.AnalysisType.RAD_PATTERN

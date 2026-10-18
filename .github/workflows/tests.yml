@@ -17,8 +17,7 @@ jobs:
         with:
           environment-file: environment.yml
           activate-environment: antenna-meep-project
-          auto-activate-base: false
-          channels: conda-forge,defaults
+          auto-activate: false
 
       - name: Run unit tests
         shell: bash -el {0}

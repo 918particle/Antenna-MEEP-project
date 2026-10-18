@@ -49,7 +49,7 @@ class Analysis(ABC):
 
         self._set_up_output_directory(output_folder=output_folder)
 
-    def _set_up_output_directory(self, output_folder):
+    def _set_up_output_directory(self, output_folder: Path | str):
         output_folder_path = Path(__file__).parent / output_folder
         output_folder_path = resolve_output_folder(output_folder=output_folder)
         output_folder_path.mkdir(exist_ok=True)

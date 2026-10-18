@@ -1,17 +1,24 @@
 import unittest
 from pathlib import Path
 
+from parameterized import parameterized
+
 import tests.mock_models as mm
 import utilities as u
 
 
 class TestUtilities(unittest.TestCase):
-    def test_resolve_output_folder_includes_dir(self):
-        """Tests resolve_output_folder() when output_folder includes the results directory
-        """
-
-        output_folder = "results/test1"
-
+    @parameterized.expand(
+        [
+            ("includes_directory_str", "results/test1"),
+            ("without_directory_str", "test1"),
+            ("includes_directory_path", Path("results/test1")),
+            ("without_directory_path", Path("test1")),
+        ]
+    )
+    def test_resolve_output_folder_includes_dir(
+        self, name: str, output_folder: str | Path
+    ):
         res = u.resolve_output_folder(output_folder=output_folder)
 
         self.assertIsInstance(res, Path)
