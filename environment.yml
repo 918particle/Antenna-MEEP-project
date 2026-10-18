@@ -1,0 +1,10 @@
+name: antenna-meep-project
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.13
+  - pymeep
+  - h5utils
+  - imagemagick
+  - pandas

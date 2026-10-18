@@ -43,3 +43,4 @@ class TestAnalysis(unittest.TestCase):
         self.assertEqual(res[0], math.ceil(max_x + CELL_PADDING) * 2)
         self.assertEqual(res[1], math.ceil(max_y + CELL_PADDING) * 2)
         self.assertEqual(res[2], math.ceil(max_z + CELL_PADDING) * 2)
+

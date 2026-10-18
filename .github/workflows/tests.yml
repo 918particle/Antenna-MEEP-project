@@ -1,0 +1,25 @@
+name: Unit Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          environment-file: environment.yml
+          activate-environment: antenna-meep-project
+          auto-activate-base: false
+          channels: conda-forge,defaults
+
+      - name: Run unit tests
+        shell: bash -el {0}
+        run: python -m unittest discover -s tests

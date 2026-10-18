@@ -28,6 +28,13 @@ class Analysis(ABC):
         output_folder: Path | str,
         max_parallelization: int = os.cpu_count() - 1,
     ):
+        """_summary_
+
+        Args:
+            analysis_config (AnalysisConfig): AnalysisConfig for analysis.
+            output_folder (Path | str): Relative path of folder to output results to.
+            max_parallelization (int, optional): Maximum parallel tasks. Defaults to os.cpu_count()-1.
+        """
         self.analysis_config = analysis_config
         self.analysis_type_config = analysis_config.analysis_type_config
         self.antenna_config = analysis_config.antenna_config
