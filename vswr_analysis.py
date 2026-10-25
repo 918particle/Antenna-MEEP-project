@@ -152,7 +152,7 @@ class VSWRAnalysis(Analysis):
 
         frequencies = np.array(flux_frequencies)
         gamma = np.abs(np.divide(reflection_flux, normalization_flux))
-        vswr = (1 + gamma) / (1 - gamma)
+        vswr = (1 + np.sqrt(gamma)) / (1 - np.sqrt(gamma))
         df = pd.DataFrame(
             {
                 "frequencies": frequencies,
