@@ -51,8 +51,7 @@ Documentation: https://www.anaconda.com/docs/getting-started/miniconda/install/l
 
 ### 2. / 5. Check miniconda3 installed correctly
 1. Run `conda --version or conda list`
-    - Output should look like these in this picture!
-   <img width="796" height="888" alt="conda list" src="https://github.com/user-attachments/assets/556fbd0b-14ee-478a-bff8-ae46b803fa0a" />
+    - Output should look like these in this picture! <img width="796" height="888" alt="conda list" src="https://github.com/user-attachments/assets/556fbd0b-14ee-478a-bff8-ae46b803fa0a" />
         - You may have a different version installed or different packages in the conda environment
 
 ### 3. / 6. Install MEEP
@@ -82,6 +81,36 @@ Documentation: https://www.anaconda.com/docs/getting-started/miniconda/install/l
 5. Run `git clone' followed by the url
     - This will probably be `git clone https://github.com/918particle/Antenna-MEEP-project.git` but technically the link could change so it is good practice to copy it from the repo
 6. Now if you run `ls` you will see a new folder called the name of the repo and then if you `cd` into it then `ls` again, you will see what’s in it
+
+### 6. / 9. Set up VS Code
+This is an optional step, but Visual Studio Code (AKA VS Code) is a commonly-used IDE with many helpful features.
+1. Download VS Code
+    - Download page: https://code.visualstudio.com/download?_exp_download=fb315fc982
+    - If you are on a computer with a Windows OS, download the Windows version
+    - If you are on a computer with a Linux OS, check what distribution you have
+        -  Run `cat /etc/os-release` in your terminal to check
+        -  For ‘NAME’ it will say the distribution name
+        -  Search online for ‘does your_distribution_name use debian or rpm?’
+            -  If it says debian, download the .deb format, if it says RPM download the .rpm format
+    -  Follow the prompts in the installer then open it once it’s done installing
+
+2. For Windows Users: Download WSL Extension
+<br>  _Only for Windows users! Skip this step if you are on a Linux machine._
+    1. In the extensions menu (left menu bar, the four cubes), search ‘wsl’
+    2. Click install for the one called ‘WSL’ by Microsoft, icon is the Linux penguin (whose name is Tux)
+    3. When it’s done installing, press Ctrl+Shift+P on your keyboard
+        -  This opens the command pallet
+    4. Search for and select ‘WSL: Connect to WSL’
+    5. Wait for the progress bar at the bottom to say it’s done
+    6. Open the command pallet again and search for and select ‘WSL: Open folder in WSL’
+    7. Select the folder that the GitHub repo is in
+       - The one created by `git clone`
+
+2. For Linux Users: Open the code folder
+<br> _Only for Linux users! Skip this step if you are on a Windows machine._
+    1. Click ‘Open Folder…’
+    2. Select the folder that the GitHub repo is in
+       - The one created by `git clone`
 
 # How to Run the Code! 🏃
 To run anything, you run the file run_analysis.py.
