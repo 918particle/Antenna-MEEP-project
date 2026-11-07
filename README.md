@@ -1,8 +1,95 @@
+# Initial Set Up
+## On Windows
+### 1. Install WSL
+WSL documentation: https://learn.microsoft.com/en-us/windows/wsl/setup/environment
+1. Open Powershell in the Start Menu
+2. Click 'Run as Administrator'
+    - If it says ‘Do you allow this application to make changes to your device’ -> Click ‘Yes’
+3. Run `wsl --install -d Ubuntu`
+    - This will download the Ubuntu distribution of Linux (the -d is short for --distribution)
+       - The distributions are pretty similar but Ubuntu is the default
+    - You will be prompted to create a username and password
+       - When you type in your password, nothing will appear but it is registering it! It’s called ‘blind typing’
+       - Make your password memorable or write it down. You can always reset it though
+       - You’ll need your password when installing packages
+### 2. Confirm WSL install worked
+1. Restart your computer
+2. Open the Powershell terminal again
+3. Run `wsl -l -v`
+    - This is shorthand for `wsl --list --verbose`
+    - This means we want a list of what’s installed in WSL and we want details about each item
+    - It should look like what’s below, though the version potentially may be different
+<img width="874" height="304" alt="wsl list" src="https://github.com/user-attachments/assets/5e41647f-aae9-4d26-8de6-6563318eb739" />
+
+
+### 3. Open Ubuntu
+- You can now open Ubuntu by just searching for it in your Start menu!
+- What opens is a regular looking terminal, like what you’d see if you opened Linux on a computer with a Linux OS
+Continue onto the next section
+
+## On Linux / On Windows continued
+If you are on Linux, start here by opening a regular terminal. If you are on Windows, start here from the last step where you opened Ubuntu.
+
+### 1. / 4. Install miniconda3
+You can skip this step if you already have miniconda3 installed in your Linux environment.
+Documentation: https://www.anaconda.com/docs/getting-started/miniconda/install/linux-install#wget
+1. Run `wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh`
+    - This downloads the installer for miniconda3
+2. Run `bash Miniconda3-latest-Linux-x86_64.sh`
+    - This actually installs miniconda3 from the installer
+    - It will prompt you to accept the license terms
+        - You may need to scroll through the terms to get to the accept/decline prompt
+        - You will have to say ‘yes’ for it to install
+    - It will prompt you for an install location
+        - It will suggest something like `/home/yourusername/miniconda3`
+        - That’s correct, accept that
+    - At the end it will say something like ‘Do you wish the installer to initialize Miniconda3?’
+        - Say yes, it means that your terminal will automatically start conda when you open it
+3. Run `source ~/.bashrc`
+    - The line basically restarts the shell
+    - Alternatively, you can just close the terminal and reopen it
+
+### 2. / 5. Check miniconda3 installed correctly
+1. Run `conda --version or conda list`
+    - Output should look like these in this picture!
+   <img width="796" height="888" alt="conda list" src="https://github.com/user-attachments/assets/556fbd0b-14ee-478a-bff8-ae46b803fa0a" />
+        - You may have a different version installed or different packages in the conda environment
+
+### 3. / 6. Install MEEP
+1. Run `conda create -n mp -c conda-forge pymeep`
+    - This creates a new virtual environment then installs MEEP in it
+    - `create` creates a new virtual environment
+    - `-n mp` means we are naming the virtual environment ‘mp' (you can name it something else)
+    - `-c conda-forge` is saying we will be downloading the package from a channel called conda-forge (which is a package manager for conda)
+    - `pymeep` is the name of Meep’s python package
+2. Run `conda install conda-forge::h5utils`
+    - This installs the h5utils package from conda-forge, for some MEEP stuff we use h5topng from it
+3. Run `conda activate mp`
+    - This activates the virtual environment
+    - You will need to run this every time you start a new terminal that you are running MEEP python code in
+
+### 4. / 7. Install Git
+1. Run `conda install conda-forge::git`
+
+### 5. / 8. Clone the repo
+1. Open your Linux terminal
+2. Navigate into the folder where you want the code to go
+    - Note that the cloning process will create another folder in your current folder that then contains all the code
+3. On the repo page on Github, click the big green ‘Code’ button, then copy the HTTPS URL
+<img width="1280" height="632" alt="Screenshot 2026-11-06 203628" src="https://github.com/user-attachments/assets/aa265ea4-34f5-4c58-afc8-b8788c7d5ac4" />
+
+4. Go back to your terminal
+5. Run `git clone' followed by the url
+    - This will probably be `git clone https://github.com/918particle/Antenna-MEEP-project.git` but technically the link could change so it is good practice to copy it from the repo
+6. Now if you run `ls` you will see a new folder called the name of the repo and then if you `cd` into it then `ls` again, you will see what’s in it
+
 # How to Run the Code! 🏃
 To run anything, you run the file run_analysis.py.
 
 There is an area of that file that is specifically labeled "INPUTS". That is the only area you should need to touch.
-<img width="1222" height="183" alt="image" src="https://github.com/user-attachments/assets/73933c4a-1b4d-4686-84d5-ac3ff07dc290" />
+<img width="607" height="405" alt="Inputs" src="https://github.com/user-attachments/assets/7bdcbaae-e049-443b-83bb-bba75ebce635" />
+
+
 
 ## Instructions
 - Set 'config' equal to the AnalysisConfig you want to run. (See section below on configs)
@@ -20,41 +107,4 @@ There is an area of that file that is specifically labeled "INPUTS". That is the
   - This is the maximum number of simulations that will be ran at once.
   - Set it to None if you want to use the default value which is one less than the number of CPU logical processes on the computer you running on (so your computer if running it locally or the computer you are SSHd into).
 
-
-# Configs
-The parameters for a run all live in "config" files. You can view these in the "configs" folder.
-
-<img width="240" height="135" alt="image" src="https://github.com/user-attachments/assets/903838f6-b66f-4451-8b31-17a17ea1a825" />
-<br>
-<br>
-
-The purpose of these configs is so that it is straightforward to have multiple combinations of parameters saved. 
-
-For instance, lets say I frequently run a 3D 5-horn radiation pattern analysis. I also frequently run a 2D 1-horn radiation pattern analysis. Instead of needing to remember all of the different parameters for both analyses and having to retype them in every time I'm changing back and forth, I create two configs, ex: ANALYSIS_CONFIG_5HORN_3D and ANALYSIS_CONFIG_1HORN_2D. 
-
-<img width="459" height="345" alt="image" src="https://github.com/user-attachments/assets/8b006ff2-2fa7-46fd-9cae-239cc05bd5c2" /><br>*Here I have a few different configs for some different analyses* 
-<br>
-<br>
-
-Now when I want to run one of those, I can just type in the name of the config and it contains all of the associated parameters. Another bonus is then when you commit the configs to the repository, other people can easily see and use the same parameters you ran.
-
-This is especially helpful because there are many sets of parameters that may be reused across different analyses. For instance, the properties of a GDSII file - such as which layer is which part of the antenna - are likely going to remain unchanged across analyses. Therefore, there is a config for a GDSII file, which then can be reused across analyses.
-
-Now for what all the configs are.
-- First there is the GDSIIFileConfigHorn (specifically horn because we will add other antenna types later).
-  - These configs live in ~/configs/gdsii_configs.py.
-- Next is the AntennaConfig, 
-  - These configs live in ~/configs/antenna_configs.py.
-  - The property 'gdsii_file_config' should be set equal to a GDSIIFileConfigHorn (or another non-horn type of GDSII file config once we make those)
-- Now is the config for the specific analysis type
-  - For radiation pattern analysis, there is RadPatternAnalysisConfig.
-    - These configs live in ~/configs/rad_pattern_analysis.py. 
-  - For VSWR analysis, there is VSWRAnalysisConfig.
-    - These configs live in ~/configs/vswr_analysis.py.
-- Lastly, there's the AnalysisConfig
-  - These configs live in ~/configs/analysis_configs.py.
-  - These are the highest level configs. They are the ones you actually call to run in run_analysis.py.
-  - These configs have a property called 'analysis_type_config' which should be set equal to a RadPatternAnalysisConfig or a VSWRAnalysisConfig.
-
-For all configs, add on another if you need something different, or change an existing one if you know the current version is no longer needed (i.e. you are tuning the parameters).
-
+See the Wiki (up on the top menu bar) for more info on how this all works
