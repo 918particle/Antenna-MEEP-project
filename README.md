@@ -30,7 +30,7 @@ Continue onto the next section
 ## On Linux / On Windows continued
 If you are on Linux, start here by opening a regular terminal. If you are on Windows, start here from the last step where you opened Ubuntu.
 
-### 1. / 4. Install miniconda3
+### 1. Install miniconda3
 You can skip this step if you already have miniconda3 installed in your Linux environment.
 Documentation: https://www.anaconda.com/docs/getting-started/miniconda/install/linux-install#wget
 1. Run `wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh`
@@ -49,28 +49,16 @@ Documentation: https://www.anaconda.com/docs/getting-started/miniconda/install/l
     - The line basically restarts the shell
     - Alternatively, you can just close the terminal and reopen it
 
-### 2. / 5. Check miniconda3 installed correctly
+### 2. Check miniconda3 installed correctly
 1. Run `conda --version or conda list`
     - Output should look like these in this picture! <img width="796" height="888" alt="conda list" src="https://github.com/user-attachments/assets/556fbd0b-14ee-478a-bff8-ae46b803fa0a" />
         - You may have a different version installed or different packages in the conda environment
+    
+### 3. Install Git
+_Skip if you have Git already installed_
+1. For Ubuntu based Linux distributions, this line should work: `sudo apt update && sudo apt install git`, but give it a search online to check what you should run
 
-### 3. / 6. Install MEEP
-1. Run `conda create -n mp -c conda-forge pymeep`
-    - This creates a new virtual environment then installs MEEP in it
-    - `create` creates a new virtual environment
-    - `-n mp` means we are naming the virtual environment ‘mp' (you can name it something else)
-    - `-c conda-forge` is saying we will be downloading the package from a channel called conda-forge (which is a package manager for conda)
-    - `pymeep` is the name of Meep’s python package
-2. Run `conda install conda-forge::h5utils`
-    - This installs the h5utils package from conda-forge, for some MEEP stuff we use h5topng from it
-3. Run `conda activate mp`
-    - This activates the virtual environment
-    - You will need to run this every time you start a new terminal that you are running MEEP python code in
-
-### 4. / 7. Install Git
-1. Run `conda install conda-forge::git`
-
-### 5. / 8. Clone the repo
+### 4. Clone the repo
 1. Open your Linux terminal
 2. Navigate into the folder where you want the code to go
     - Note that the cloning process will create another folder in your current folder that then contains all the code
@@ -82,21 +70,29 @@ Documentation: https://www.anaconda.com/docs/getting-started/miniconda/install/l
     - This will probably be `git clone https://github.com/918particle/Antenna-MEEP-project.git` but technically the link could change so it is good practice to copy it from the repo
 6. Now if you run `ls` you will see a new folder called the name of the repo and then if you `cd` into it then `ls` again, you will see what’s in it
 
-### 6. / 9. Set up VS Code
+### 5. Create conda environment and install dependencies
+1. Run `conda env create -f environment.yml -n mp`
+    - This creates a conda environment called mp and installs all the dependencies in it for the repo, including MEEP
+2. Run `conda activate mp`
+    - This activates the virtual environment
+    - You will need to run this every time you start a new terminal that you are running MEEP python code in
+
+
+### 6. (Optional) Set up VS Code
 This is an optional step, but Visual Studio Code (AKA VS Code) is a commonly-used IDE with many helpful features.
-1. Download VS Code
-    - Download page: https://code.visualstudio.com/download?_exp_download=fb315fc982
-    - If you are on a computer with a Windows OS, download the Windows version
-    - If you are on a computer with a Linux OS, check what distribution you have
-        -  Run `cat /etc/os-release` in your terminal to check
-        -  For ‘NAME’ it will say the distribution name
-        -  Search online for ‘does your_distribution_name use debian or rpm?’
-            -  If it says debian, download the .deb format, if it says RPM download the .rpm format
+#### 1. Download VS Code
+
+- Download page: https://code.visualstudio.com/download?_exp_download=fb315fc982
+- If you are on a computer with a Windows OS, download the Windows version
+- If you are on a computer with a Linux OS, check what distribution you have
+    -  Run `cat /etc/os-release` in your terminal to check
+    -  For ‘NAME’ it will say the distribution name
+    -  Search online for ‘does your_distribution_name use debian or rpm?’
+       -  If it says debian, download the .deb format, if it says RPM download the .rpm format
     -  Follow the prompts in the installer then open it once it’s done installing
 
-2. This step depends on your OS
-- For Windows Users: Download WSL Extension
-<br>  _Only for Windows users! Skip this step if you are on a Linux machine._
+#### 2. This step depends on your OS
+- _**For Windows Users: Download WSL Extension**_
     1. In the extensions menu (left menu bar, the four cubes), search ‘wsl’
     2. Click install for the one called ‘WSL’ by Microsoft, icon is the Linux penguin (whose name is Tux)
     3. When it’s done installing, press Ctrl+Shift+P on your keyboard
@@ -105,41 +101,97 @@ This is an optional step, but Visual Studio Code (AKA VS Code) is a commonly-use
     5. Wait for the progress bar at the bottom to say it’s done
     6. Open the command pallet again and search for and select ‘WSL: Open folder in WSL’
     7. Select the folder that the GitHub repo is in
-       - The one created by `git clone`
+        - The one created by `git clone`
 
-- For Linux Users: Open the code folder
-<br> _Only for Linux users! Skip this step if you are on a Windows machine._
+- _**For Linux Users: Open the code folder**_
     1. Click ‘Open Folder…’
     2. Select the folder that the GitHub repo is in
-       - The one created by `git clone`
+        - The one created by `git clone`
 
-3. Save folder as workspace
-<br> _This is optional but if you close and reopen a workspace, it saves your UI layout and reopens all your tabs you had open._
-    1. Click ‘File’ then ‘Save Workspace As…’
-       - This will be creating a `.code-workspace` file
-       - I’d save it to be in the repo folder
-    2. Reload VS Code
-       - Open the command pallet (`Ctrl+Shift+P`) then select ‘Reload Window’
+#### 3. Save folder as workspace
+_This is optional but recommended! It saves your preferences and if you close and reopen a workspace, it saves your UI layout and reopens all your tabs you had open._
+1. Click ‘File’ then ‘Save Workspace As…’
+    - This will be creating a `.code-workspace` file
+    - I’d save it to be in the repo folder
+2. Reload VS Code
+    - Open the command pallet (`Ctrl+Shift+P`) then select ‘Reload Window’
 
-4. Install extensions
-<br> _The extensions menu is in the left hand menu, the symbol with the four cubes._
-    1. Install Python extension
-       - Note that this Python extension isn’t reinstalling Python, it is installing a way for VS Code to run Python
-       - The extension is just called 'Python' and the developer is Microsoft
-       - Note that installing the Python extension automatically installs a few other extensions, do not be concerned
-    2. (Optional) Install Ruff
-       - Ruff is a formatter and something called a linter. Linters flags formatting errors and the formatter fixes them.
-       - If you open the command pallet (`Ctrl+Shift+P`) after installing and search Ruff, you will see all of the different command options.
-           - Clicking the settings button next to a command opens the key-bindings settings. If you want, you can set what your key-binding/keyboard shortcuts are for the various commands.
-           - I have `Ctrl+Shift+W` for `Ruff: Format Imports` and `Ctrl+Shift+D` for `Ruff: Format Document`. Those are the only two Ruff commands I use.
+#### 4. Install extensions
+1. Open the extensions menu, whcih is in the left hand menu, the symbol with the four cubes.
+2. Install Python extension
+    - Note that this Python extension isn’t reinstalling Python, it is installing a way for VS Code to run Python.
+    - The extension is just called 'Python' and the developer is Microsoft.
+    - Note that installing the Python extension automatically installs a few other extensions, do not be concerned.
+3. (Optional) Install Ruff
+    - Ruff is a formatter and something called a linter. Linters flags formatting errors and the formatter fixes them.
+    - The extension developer is Astral Software.
+    - If you open the command pallet (`Ctrl+Shift+P`) after installing and search Ruff, you will see all of the different command options.
+        - Clicking the settings button next to a command opens the key-bindings settings. If you want, you can set what your key-binding/keyboard shortcuts are for the various commands.
+        - I have `Ctrl+Shift+W` for `Ruff: Format Imports` and `Ctrl+Shift+D` for `Ruff: Format Document`. Those are the only two Ruff commands I use.
+        - Alternatively, see step 7.5 of this section to have it auto format the document and imports when you save the file.
+4. (Optional) Install autodocstring
+    - This one is helpful if you will be doing any code developing. If you write a function then under the function name type three double quotes ("""), it will autogenerate a template for the docstring.
+    - The developer is Nils Werner.
 
-5. Select Python interpreter
-<br> _The Python extension will need to have finished installing for these steps_
-    1. Open up the command pallet (`Ctrl+Shift+P`) and click on `Python: Select Interpreter`
-    2. You may be prompted to select which workspace file this is for. Click the one you created (if you created one)
-    3. We want to select the one called `mp`, with the path most likely `~/miniconda3/envs/mp/bin/python`
-       - If you don’t see it, you will need to select ‘Enter interpreter path…’, then paste in the path
-       - If that doesn’t work, click ‘Find’, then navigate to where the python file is, which should be at that path
+#### 5. Select Python interpreter
+_The Python extension will need to have finished installing for these steps_
+1. Open up the command pallet (`Ctrl+Shift+P`) and click on `Python: Select Interpreter`.
+2. You may be prompted to select which workspace file this is for. Click the one you created (if you created one).
+3. We want to select the one called `mp`, with the path most likely `~/miniconda3/envs/mp/bin/python`.
+    - If you don’t see it, you will need to select ‘Enter interpreter path…’, then paste in the path.
+    - If that doesn’t work, click ‘Find’, then navigate to where the python file is, which should be at that path.
+    
+#### 6. (Optional) Enable Autosave
+- This is helpful so you don't forget to save. Remember, Git has version control so if you've committed something before changing it, you can always restore that old version.
+- Enable it by going to File -> Autosave.
+     
+#### 7. (Optional) Set up settings.json file 
+_This is a way to set up some preferences for VS Code. I think all of this can also be done from the Settings menu._
+1. If you do not have a folder called '.vscode' in the repo folder, create one.
+2. Inside that folder, if you do not have a file called settings.json, create one.
+3. Inside settings.json, paste the following:
+   ```
+   {
+        "python.defaultInterpreterPath": "/home/yourusername/miniconda3/envs/mp/bin/python",
+        "python-envs.defaultEnvManager": "ms-python.python:conda",
+        "python-envs.defaultPackageManager": "ms-python.python:conda",
+        "python-envs.pythonProjects": [
+            {
+                "path": ".",
+                "envManager": "ms-python.python:conda",
+                "packageManager": "ms-python.python:conda"
+            }
+        ]
+   }
+   ```
+   Make sure to change 'yourusername' in that first line to your username. Theoretically this should have it automatically activate `mp` whenever you open a new terminal. It's theoretical because sometimes it mysteriously doesn't work.
+   
+4. To be able to run the unit tests in VS Code, add a comma after the last square bracket and add the following after that, before the last curly bracket:
+   ```
+       "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.unittestEnabled": true,
+    "python.testing.pytestEnabled": false
+   ```
+   You can see the VS Code unit test menu by clicking the little flask icon on the left side bar.
+
+5. If you have Ruff installed and want it to autoformat when you save a file, add a comma after the last square bracket and add the following after that, before the last curly bracket:
+   ```
+       "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports.ruff": "explicit"
+        }
+    }
+   ```
+   The "explicit" part means this only happens when you manually save the file, like with Ctrl+S, not when it autosaves, if you have that enabled.
+   
 
 # How to Run the Code! 🏃
 To run anything, you run the file run_analysis.py.
