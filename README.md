@@ -56,7 +56,7 @@ Documentation: https://www.anaconda.com/docs/getting-started/miniconda/install/l
     
 ### 3. Install Git
 _Skip if you have Git already installed_
-1. For Ubuntu based Linux distributions, this line should work: `sudo apt update && sudo apt install git`, but give it a search online to check what you should run
+1. For most Linux distributions, I think this line should work: `sudo apt update && sudo apt install git`, but give it a search online to check what you should run
 
 ### 4. Clone the repo
 1. Open your Linux terminal
