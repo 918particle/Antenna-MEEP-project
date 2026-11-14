@@ -94,7 +94,8 @@ This is an optional step, but Visual Studio Code (AKA VS Code) is a commonly-use
             -  If it says debian, download the .deb format, if it says RPM download the .rpm format
     -  Follow the prompts in the installer then open it once it’s done installing
 
-2. For Windows Users: Download WSL Extension
+2. This step depends on your OS
+- For Windows Users: Download WSL Extension
 <br>  _Only for Windows users! Skip this step if you are on a Linux machine._
     1. In the extensions menu (left menu bar, the four cubes), search ‘wsl’
     2. Click install for the one called ‘WSL’ by Microsoft, icon is the Linux penguin (whose name is Tux)
@@ -106,11 +107,39 @@ This is an optional step, but Visual Studio Code (AKA VS Code) is a commonly-use
     7. Select the folder that the GitHub repo is in
        - The one created by `git clone`
 
-2. For Linux Users: Open the code folder
+- For Linux Users: Open the code folder
 <br> _Only for Linux users! Skip this step if you are on a Windows machine._
     1. Click ‘Open Folder…’
     2. Select the folder that the GitHub repo is in
        - The one created by `git clone`
+
+3. Save folder as workspace
+<br> _This is optional but if you close and reopen a workspace, it saves your UI layout and reopens all your tabs you had open._
+    1. Click ‘File’ then ‘Save Workspace As…’
+       - This will be creating a `.code-workspace` file
+       - I’d save it to be in the repo folder
+    2. Reload VS Code
+       - Open the command pallet (`Ctrl+Shift+P`) then select ‘Reload Window’
+
+4. Install extensions
+<br> _The extensions menu is in the left hand menu, the symbol with the four cubes._
+    1. Install Python extension
+       - Note that this Python extension isn’t reinstalling Python, it is installing a way for VS Code to run Python
+       - The extension is just called 'Python' and the developer is Microsoft
+       - Note that installing the Python extension automatically installs a few other extensions, do not be concerned
+    2. (Optional) Install Ruff
+       - Ruff is a formatter and something called a linter. Linters flags formatting errors and the formatter fixes them.
+       - If you open the command pallet (`Ctrl+Shift+P`) after installing and search Ruff, you will see all of the different command options.
+           - Clicking the settings button next to a command opens the key-bindings settings. If you want, you can set what your key-binding/keyboard shortcuts are for the various commands.
+           - I have `Ctrl+Shift+W` for `Ruff: Format Imports` and `Ctrl+Shift+D` for `Ruff: Format Document`. Those are the only two Ruff commands I use.
+
+5. Select Python interpreter
+<br> _The Python extension will need to have finished installing for these steps_
+    1. Open up the command pallet (`Ctrl+Shift+P`) and click on `Python: Select Interpreter`
+    2. You may be prompted to select which workspace file this is for. Click the one you created (if you created one)
+    3. We want to select the one called `mp`, with the path most likely `~/miniconda3/envs/mp/bin/python`
+       - If you don’t see it, you will need to select ‘Enter interpreter path…’, then paste in the path
+       - If that doesn’t work, click ‘Find’, then navigate to where the python file is, which should be at that path
 
 # How to Run the Code! 🏃
 To run anything, you run the file run_analysis.py.
