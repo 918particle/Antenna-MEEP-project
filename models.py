@@ -26,6 +26,11 @@ class AntennaType(StrEnum):
     RF_HORN = auto()
 
 
+class Direction(StrEnum):
+    X_DIR = auto()
+    Y_DIR = auto()
+
+
 @dataclass
 class GDSIIFileConfigHorn:
     """Configuration for a GDSII file for an RF horn.
@@ -222,3 +227,10 @@ class VSWRResults:
     gamma: NDArray[np.float64]
     vswr: NDArray[np.float64]
     df: pd.DataFrame
+
+
+@dataclass
+class Dimensions:
+    x_dim: float
+    y_dim: float
+    z_dim: float

@@ -1,20 +1,26 @@
+import copy
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 
 import meep as mp
 import numpy as np
 
-from models import AnalysisConfig, AnalysisType, Dimensionality
+from cable import Cable
+from models import AnalysisConfig, AnalysisType, Dimensionality, Dimensions, Direction
+from utilities import get_geometry_orientation
 
 
 class Antenna(ABC):
     def __init__(self, analysis_config: AnalysisConfig):
+        self.analysis_config = analysis_config
         self.antenna_config = analysis_config.antenna_config
         self.analysis_type_config = analysis_config.analysis_type_config
         self._file_config = self.antenna_config.gdsii_file_config
         self.dimensionality: Dimensionality = analysis_config.dimensionality
 
         self.geometry: list[mp.GeometricObject] | None = None
+        self.antenna_only_geometry: list[mp.GeometricObject] | None = None
+        self.cable_only_geometry: list[mp.GeometricObject] | None = None
         self.conductor: list[mp.GeometricObject] | None = None
         self.dielectric: list[mp.GeometricObject] | None = None
         self.base_source: mp.Source | None = None
@@ -37,7 +43,7 @@ class Antenna(ABC):
         return lambda t: np.exp(-0.5 * (t - mu) * (t - mu) / sigma / sigma)
 
     @abstractmethod
-    def _set_geometry_rad_pattern(self) -> None:
+    def _set_antenna_geometry(self) -> None:
         pass
 
     @abstractmethod
@@ -48,6 +54,11 @@ class Antenna(ABC):
     def _set_geometry_vswr_only_cable(self) -> None:
         pass
 
+    def _set_cable_properties(self, cable: Cable) -> None:
+        self.cable_only_geometry = copy.deepcopy(cable.geometry)
+        self.conductor = copy.deepcopy(cable.conductor)
+        self.dielectric = copy.deepcopy(cable.dielectric)
+
     def set_geometry(
         self,
         x_offset: float = 0.0,
@@ -55,20 +66,35 @@ class Antenna(ABC):
         only_cable: bool = False,
         x_centering_adjustment=0.0,
         y_centering_adjustment=0.0,
+        cell_dims: Dimensions | None = None,
     ) -> None:
         self.geometry = []
 
-        if self.analysis_type_config.analysis_type == AnalysisType.RAD_PATTERN:
-            self._set_geometry_rad_pattern()
-        elif self.analysis_type_config.analysis_type == AnalysisType.VSWR:
-            if only_cable:
-                self._set_geometry_vswr_only_cable()
-            else:
-                self._set_geometry_vswr()
+        if only_cable:
+            cable = Cable(
+                analysis_config=self.analysis_config,
+                is_infinite=True,
+                cell_dims=cell_dims,
+            )
+            cable.set_geometry()
+            self.geometry = copy.deepcopy(cable.geometry)
+            self._set_cable_properties(cable=cable)
+            self.antenna_only_geometry = []
+        else:
+            self._set_antenna_geometry()
+            self.antenna_only_geometry = copy.deepcopy(self.geometry)
 
-        self._shift_antenna(x_offset=x_offset, y_offset=y_offset)
+            if self.analysis_type_config.analysis_type == AnalysisType.VSWR:
+                cable = Cable(analysis_config=self.analysis_config, is_infinite=False)
+                cable.set_geometry()
+                self._set_cable_properties(cable=cable)
+                self.geometry += cable.geometry
+            else:
+                self.cable_only_geometry = []
+
         self._shift_antenna(
-            x_offset=x_centering_adjustment, y_offset=y_centering_adjustment
+            x_offset=x_offset + x_centering_adjustment,
+            y_offset=y_offset + y_centering_adjustment,
         )
 
     @abstractmethod
@@ -76,6 +102,7 @@ class Antenna(ABC):
         self,
         frequency: float,
         base_phase_offset: float,
+        direction: Direction,
         x_offset: float = 0.0,
         y_offset: float = 0.0,
     ):
@@ -97,14 +124,18 @@ class Antenna(ABC):
         base_phase_offset: float | None = None,
     ):
         if self.analysis_type_config.analysis_type == AnalysisType.RAD_PATTERN:
+            source_dir = get_geometry_orientation(self.antenna_only_geometry)
             self._set_source_rad_pattern(
                 x_offset=x_offset,
                 y_offset=y_offset,
                 frequency=frequency,
                 base_phase_offset=base_phase_offset,
+                direction=source_dir,
             )
         elif self.analysis_type_config.analysis_type == AnalysisType.VSWR:
+            source_dir = get_geometry_orientation(self.cable_only_geometry)
             self._set_source_vswr(
                 x_offset=x_offset,
                 y_offset=y_offset,
+                direction=source_dir,
             )

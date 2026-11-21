@@ -1,7 +1,7 @@
 import meep as mp
 
 from antenna import Antenna
-from models import AnalysisConfig, Dimensionality
+from models import AnalysisConfig, Dimensionality, Direction
 
 
 class RFHorn(Antenna):
@@ -28,7 +28,7 @@ class RFHorn(Antenna):
         )
         self.geometry.extend(top)
 
-    def _set_sides_geometry(self) -> None:
+    def _set_sides_back_geometry(self) -> None:
         sides = mp.get_GDSII_prisms(
             material=mp.metal,
             GDSIIFile=str(self._file_config.file_path),
@@ -38,8 +38,6 @@ class RFHorn(Antenna):
         )
         self.geometry.extend(sides)
 
-    def _set_geometry_rad_pattern(self) -> None:
-        self._set_sides_geometry()
         back = mp.get_GDSII_prisms(
             material=mp.metal,
             GDSIIFile=str(self._file_config.file_path),
@@ -48,6 +46,9 @@ class RFHorn(Antenna):
             zmax=self.antenna_config.antenna_height / 2,
         )
         self.geometry.extend(back)
+
+    def _set_antenna_geometry(self) -> None:
+        self._set_sides_back_geometry()
 
         if self.dimensionality == Dimensionality.THREE_DIMENSIONAL:
             self._set_top_bottom_geometry()
@@ -125,17 +126,26 @@ class RFHorn(Antenna):
             )
             self.geometry.extend(bottom_dielectric)
 
+    def _set_geometry_vswr_cable_objects(self):
+        mp.Prism()
+
     def _set_geometry_vswr(self) -> None:
         self._set_geometry_vswr_only_cable()
-        self._set_sides_geometry()
+        self._set_sides_back_geometry()
 
         if self.dimensionality == Dimensionality.THREE_DIMENSIONAL:
             self._set_top_bottom_geometry()
+
+    def _get_meep_source_direction(self, direction: Direction):
+        if direction == Direction.X_DIR:
+            return mp.Ex
+        return mp.Ey
 
     def _set_source_rad_pattern(
         self,
         frequency: float,
         base_phase_offset: float,
+        direction: Direction,
         x_offset: float = 0.0,
         y_offset: float = 0.0,
     ) -> None:
@@ -156,7 +166,7 @@ class RFHorn(Antenna):
                 ),
                 start_time=1,
             ),
-            component=mp.Ey,
+            component= self._get_meep_source_direction(direction=direction),
             volume=src_vol,
             amplitude=1,
         )
@@ -169,7 +179,7 @@ class RFHorn(Antenna):
                 ),
                 start_time=1,
             ),
-            component=mp.Ey,
+            component=self._get_meep_source_direction(direction=direction),
             volume=src_vol,
             amplitude=1,
         )
@@ -177,6 +187,7 @@ class RFHorn(Antenna):
 
     def _set_source_vswr(
         self,
+        direction: Direction,
         x_offset: float = 0.0,
         y_offset: float = 0.0,
     ) -> None:
@@ -196,7 +207,7 @@ class RFHorn(Antenna):
                 ),
                 start_time=1,
             ),
-            component=mp.Ey,
+            component=self._get_meep_source_direction(direction=direction),
             volume=src_vol,
             amplitude=1,
         )

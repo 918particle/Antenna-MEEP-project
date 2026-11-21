@@ -11,14 +11,15 @@ from models import (
     AnalysisType,
     AntennaType,
     Dimensionality,
+    Dimensions,
     RadPatternResults,
     VSWRResults,
 )
 from rf_horn import RFHorn
-from utilities import filter_kwargs, resolve_output_folder
+from utilities import filter_kwargs, get_cell_dimensions, resolve_output_folder
 
 ANTENNA_CLASSES = {AntennaType.RF_HORN: RFHorn}
-CELL_PADDING = 20
+CELL_PADDING = 10
 
 
 class Analysis(ABC):
@@ -45,6 +46,8 @@ class Analysis(ABC):
         self.output_folder: Path | None = None
         self.antennas: list[Antenna] | None = None
         self.geometry: list[mp.GeometricObject] | None = None
+        self.antenna_only_geometry: list[mp.GeometricObject] | None = None
+        self.cable_only_geometry: list[mp.GeometricObject] | None = None
         self.results: RadPatternResults | VSWRResults | None = None
 
         self._set_up_output_directory(output_folder=output_folder)
@@ -56,11 +59,20 @@ class Analysis(ABC):
         self.output_folder = output_folder_path
 
     def _get_centering_adjustment(self) -> None:
-        vertices = [vertice for prism in self.geometry for vertice in prism.vertices]
-        x = [vertice.x for vertice in vertices]
-        center_x = (max(x) + min(x)) / 2
-        y = [vertice.y for vertice in vertices]
-        center_y = (max(y) + min(y)) / 2
+        # only center on antenna, cable should extend out past PML
+        if len(self.antenna_only_geometry) > 0:
+            vertices = [
+                vertice
+                for prism in self.antenna_only_geometry
+                for vertice in prism.vertices
+            ]
+            x = [vertice.x for vertice in vertices]
+            center_x = (max(x) + min(x)) / 2
+            y = [vertice.y for vertice in vertices]
+            center_y = (max(y) + min(y)) / 2
+        else:
+            center_x = 0
+            center_y = 0
 
         self.x_centering_adjustment = 0 - center_x
         self.y_centering_adjustment = 0 - center_y
@@ -68,9 +80,13 @@ class Analysis(ABC):
     def _create_antennas(
         self,
         only_cable: bool = False,
+        cell_dims: Dimensions | None = None,
     ) -> None:
         self.antennas = []
         self.geometry = []
+        self.antenna_only_geometry = []
+        self.cable_only_geometry = []
+
         if self.analysis_config.analysis_type == AnalysisType.RAD_PATTERN:
             num_antenna = self.analysis_type_config.num_antenna
             x_offset = self.analysis_type_config.x_offset
@@ -93,51 +109,38 @@ class Analysis(ABC):
             antenna: Antenna = ANTENNA_CLASSES[self.antenna_config.antenna_type](
                 analysis_config=self.analysis_config
             )
-            self.antennas.append(antenna)
-
             antenna.set_geometry(
                 x_offset=x_offset * i,
                 y_offset=y_offset * i,
                 only_cable=only_cable,
                 x_centering_adjustment=x_centering_adjustment,
                 y_centering_adjustment=y_centering_adjustment,
+                cell_dims=cell_dims,
             )
+            self.antennas.append(antenna)
+
             self.geometry.extend(antenna.geometry)
-
-    def _get_cell_dimensions(self) -> tuple[int, int, int]:
-        temp_geometry = (
-            self.geometry
-        )  # need to do because _create_antennas() overwrites it
-
-        if self.analysis_config.analysis_type == AnalysisType.VSWR:
-            # only need to recreate antennas for VSWR because it changes across parts of the sim (RadPattern doesn't)
-            self._create_antennas(only_cable=False)
-
-        vertices = [vertice for prism in self.geometry for vertice in prism.vertices]
-        x_dim = (
-            math.ceil(max([abs(vertice.x) for vertice in vertices]) + CELL_PADDING) * 2
-        )
-        y_dim = (
-            math.ceil(max([abs(vertice.y) for vertice in vertices]) + CELL_PADDING) * 2
-        )
-        if self.analysis_config.dimensionality == Dimensionality.THREE_DIMENSIONAL:
-            z_dim = (
-                math.ceil(max([abs(vertice.z) for vertice in vertices]) + CELL_PADDING)
-                * 2
-            )
-        else:
-            z_dim = 0
-
-        self.geometry = temp_geometry  # reset to desired geometry
-        return x_dim, y_dim, z_dim
+            self.antenna_only_geometry.extend(antenna.antenna_only_geometry)
+            self.cable_only_geometry.extend(antenna.cable_only_geometry)
 
     @abstractmethod
     def _get_sources(self, **kwargs) -> list[mp.Source]:
         pass
 
     def setup_sim(self, **kwargs) -> mp.Simulation:
-        x_dim, y_dim, z_dim = self._get_cell_dimensions()
-        cell_size = mp.Vector3(x_dim, y_dim, z_dim)
+        if not kwargs.get("cell_dims", None):
+            kwargs["cell_dims"] = get_cell_dimensions(
+                geometry=self.antenna_only_geometry,
+                analysis_config=self.analysis_config,
+                cell_padding=CELL_PADDING,
+                x_shift=self.x_centering_adjustment,
+                y_shift=self.y_centering_adjustment,
+            )
+        cell_size = mp.Vector3(
+            x=kwargs["cell_dims"].x_dim,
+            y=kwargs["cell_dims"].y_dim,
+            z=kwargs["cell_dims"].z_dim,
+        )
 
         sources = self._get_sources(**filter_kwargs(self._get_sources, kwargs))
 

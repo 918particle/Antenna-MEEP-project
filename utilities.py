@@ -1,4 +1,6 @@
+import copy
 import inspect
+import math
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -8,7 +10,14 @@ import meep as mp
 import numpy as np
 import pandas as pd
 
-from models import RadPatternResults, VSWRResults
+from models import (
+    AnalysisConfig,
+    Dimensionality,
+    Dimensions,
+    Direction,
+    RadPatternResults,
+    VSWRResults,
+)
 
 
 def frequency_meep2ghz(meep_freq: float | list[float]) -> float | list[float]:
@@ -175,7 +184,14 @@ def plot_radiation_pattern(
                 lab_data_file = Path("lab_data") / lab_data_file
             lab_angles, lab_directivity = np.loadtxt(lab_data_file, unpack=True)
             lab_angles *= np.pi / 180.0
-            plt.polar(lab_angles, lab_directivity, "o", markerfacecolor='none', markeredgecolor='black', label="lab")
+            plt.polar(
+                lab_angles,
+                lab_directivity,
+                "o",
+                markerfacecolor="none",
+                markeredgecolor="black",
+                label="lab",
+            )
         ax = fig.gca()
         ax.set_rlim(-26, 1)
         ax.set_rticks([-15, -3])
@@ -216,7 +232,13 @@ def plot_vswr(
             lab_data_file = lab_data_file.with_suffix(".dat")
         lab_frequencies, _, lab_vswr = np.loadtxt(lab_data_file, unpack=True)
         plt.plot(
-            lab_frequencies, lab_vswr, "o", markerfacecolor='none', markeredgecolor='blue', linewidth=0.5, label="Lab data"
+            lab_frequencies,
+            lab_vswr,
+            "o",
+            markerfacecolor="none",
+            markeredgecolor="blue",
+            linewidth=0.5,
+            label="Lab data",
         )
     plt.legend(bbox_to_anchor=(1, 1.02), loc="upper left")
     plt.xlim(0, 18)
@@ -240,3 +262,93 @@ def plot_surfaces(
     file_name = Path(output_folder) / f"{file_name}.png"
     plt.savefig(file_name)
     plt.close()
+
+
+def shift_geometry(
+    geometry: list[mp.GeometricObject],
+    x_shift: float | None = None,
+    y_shift: float | None = None,
+):
+    for obj in geometry:
+        obj.center += mp.Vector3(x_shift, y_shift, 0)
+        obj.vertices = [v + mp.Vector3(x_shift, y_shift, 0) for v in obj.vertices]
+
+
+def get_cell_dimensions(
+    geometry: list[mp.GeometricObject],
+    analysis_config: AnalysisConfig,
+    cell_padding: float,
+    x_shift: float | None = None,
+    y_shift: float | None = None,
+    cable_geometry: list[mp.GeometricObject] | None = None,
+) -> Dimensions:
+    temp_geometry = copy.deepcopy(
+        geometry
+    )  # because lists are mutable, don't want to motify it
+    if x_shift or y_shift:
+        shift_geometry(geometry=temp_geometry, x_shift=x_shift, y_shift=y_shift)
+
+    vertices = [vertice for prism in temp_geometry for vertice in prism.vertices]
+    x_dim = math.ceil(max([abs(vertice.x) for vertice in vertices]) + cell_padding) * 2
+    y_dim = math.ceil(max([abs(vertice.y) for vertice in vertices]) + cell_padding) * 2
+
+    if analysis_config.dimensionality == Dimensionality.THREE_DIMENSIONAL:
+        z_dim = (
+            math.ceil(max([abs(vertice.z) for vertice in vertices]) + cell_padding) * 2
+        )
+    else:
+        z_dim = 0
+
+    if cable_geometry:
+        temp_cable_geometry = copy.deepcopy(
+            cable_geometry
+        )  # because lists are mutable, don't want to motify it
+        if x_shift or y_shift:
+            shift_geometry(
+                geometry=temp_cable_geometry, x_shift=x_shift, y_shift=y_shift
+            )
+
+        cable_vertices = [
+            vertice for prism in temp_cable_geometry for vertice in prism.vertices
+        ]
+        x_verts = [vertice.x for vertice in cable_vertices]
+        y_verts = [vertice.y for vertice in cable_vertices]
+        cable_x_dim = max(abs(max(x_verts)), abs(min(x_verts)))
+        cable_y_dim = max(abs(max(y_verts)), abs(min(y_verts)))
+
+        # want the edge of the cable to go slightly past the edge of the cell
+        if x_dim / 2 < cable_x_dim:
+            x_dim = (cable_x_dim - 1) * 2
+        if y_dim / 2 < cable_y_dim:
+            y_dim = (cable_y_dim - 1) * 2
+
+    return Dimensions(
+        x_dim=x_dim,
+        y_dim=y_dim,
+        z_dim=z_dim,
+    )
+
+
+def get_geometry_dimensions(geometry: list[mp.GeometricObject]) -> Dimensions:
+    vertices = [vertice for prism in geometry for vertice in prism.vertices]
+    x_verts = [vertice.x for vertice in vertices]
+    y_verts = [vertice.y for vertice in vertices]
+    z_verts = [vertice.z for vertice in vertices]
+    x_len = abs(max(x_verts) - min(x_verts))
+    y_len = abs(max(y_verts) - min(y_verts))
+    z_len = abs(max(z_verts) - min(z_verts))
+
+    return Dimensions(
+        x_dim=x_len,
+        y_dim=y_len,
+        z_dim=z_len,
+    )
+
+
+def get_geometry_orientation(geometry: list[mp.GeometricObject]) -> Direction:
+    dims = get_geometry_dimensions(geometry=geometry)
+
+    if dims.x_dim > dims.y_dim:
+        return Direction.X_DIR
+
+    return Direction.Y_DIR

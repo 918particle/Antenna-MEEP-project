@@ -9,9 +9,16 @@ from analysis import Analysis
 from models import (
     AnalysisConfig,
     Dimensionality,
+    Direction,
     VSWRResults,
 )
-from utilities import plot_surfaces, plot_vswr
+from utilities import (
+    get_cell_dimensions,
+    get_geometry_dimensions,
+    get_geometry_orientation,
+    plot_surfaces,
+    plot_vswr,
+)
 
 SIM_TIMESTEPS = 115
 FLUX_MONITOR_PADDING = 0
@@ -43,64 +50,52 @@ class VSWRAnalysis(Analysis):
         super().__init__(analysis_config=analysis_config, output_folder=output_folder)
 
     def _get_flux_monitor_dimensions(self) -> FluxMonitorDimensions:
-        x_coords = [
-            vertex.x
-            for prism in self.antennas[0].conductor
-            for vertex in prism.vertices
-        ]
-        y_coords = [
-            vertex.y
-            for prism in self.antennas[0].conductor
-            for vertex in prism.vertices
-        ]
-        z_coords = [
-            vertex.z
-            for prism in self.antennas[0].conductor
-            for vertex in prism.vertices
-        ]
-
-        x_min = min(x_coords)
-        x_max = max(x_coords)
-        y_min = min(y_coords)
-        y_max = max(y_coords)
-
-        x_size = x_max - x_min
-        y_size = y_max - y_min
-
-        # If the cable is oriented in the x-direction, the monitor should be the y-width
-        if x_size > y_size:
-            x_size = 0
-            y_size += FLUX_MONITOR_PADDING
-        # If the cable is oriented in the y-direction, the monitor should be the x-width
-        else:
+        cable_dir = get_geometry_orientation(self.cable_only_geometry)
+        cable_dims = get_geometry_dimensions(self.antennas[0].cable_only_geometry)
+        x_size = cable_dims.x_dim
+        y_size = cable_dims.y_dim
+        if cable_dir == Direction.Y_DIR:
+            # antenna is automatically centered at 0,0
+            # want midpoint between source and end of cable at antenna
+            # so that point is half of source center point
+            y_center = self.antennas[0].sources[0].center.y / 2
+            x_center = self.antennas[0].sources[0].center.x
             y_size = 0
-            x_size += FLUX_MONITOR_PADDING
+        else:
+            # antenna is automatically centered at 0,0
+            # want midpoint between source and end of cable at antenna
+            # so that point is half of source center point
+            x_center = self.antennas[0].sources[0].center.x / 2
+            y_center = self.antennas[0].sources[0].center.y
+            x_size = 0
 
         dims = FluxMonitorDimensions(
             x_size=x_size,
             y_size=y_size,
-            x_center=(x_min + x_max) / 2,
-            y_center=(y_min + y_max) / 2,
+            x_center=x_center,
+            y_center=y_center,
         )
         if self.analysis_config.dimensionality == Dimensionality.THREE_DIMENSIONAL:
-            z_min = min(z_coords)
-            z_max = max(z_coords)
-            dims.z_size = (z_max - z_min) + 2
-            dims.z_center = (z_min + z_max) / 2
+            dims.z_size = cable_dims.z_dim
+            dims.z_center = cable_dims.z_dim / 2
 
         return dims
 
-    def _get_flux_region(self, sim: mp.Simulation) -> mp.DftFlux:
+    def _get_flux_region(self, sim: mp.Simulation, direction: Direction) -> mp.DftFlux:
         f_start = 0.0
         f_stop = 0.6
         number_of_frequencies = 1024
         f_center = (f_stop + f_start) / 2.0
         df = f_stop - f_start
         dims = self._get_flux_monitor_dimensions()
+        if direction == Direction.X_DIR:
+            meep_dir = mp.X
+        else:
+            meep_dir = mp.Y
         flux_monitor_volume = mp.FluxRegion(
             center=mp.Vector3(x=dims.x_center, y=dims.y_center, z=dims.z_center),
             size=mp.Vector3(x=dims.x_size, y=dims.y_size, z=dims.z_size),
-            direction=-mp.Y,
+            direction=meep_dir,
         )
         return sim.add_flux(
             f_center,
@@ -122,33 +117,44 @@ class VSWRAnalysis(Analysis):
     def run_sim(self):
         self._create_antennas()
         self._get_centering_adjustment()
+        cell_dims = get_cell_dimensions(
+            geometry=self.antenna_only_geometry,
+            analysis_config=self.analysis_config,
+            cell_padding=10,
+            x_shift=self.x_centering_adjustment,
+            y_shift=self.y_centering_adjustment,
+            cable_geometry=self.cable_only_geometry,
+        )
+        cable_orientation = get_geometry_orientation(self.cable_only_geometry)
+
         self._create_antennas(
-            only_cable=True
-        )  # need to rerun post setting offset to center antennas
-        sim = self.setup_sim(only_cable=True)
-        flux_monitor = self._get_flux_region(sim=sim)
+            only_cable=True,
+            cell_dims=cell_dims,
+        )  # first pass was to get centering adjustment, which included creating the antenna in addition to cable
+
+        sim1 = self.setup_sim(only_cable=True, cell_dims=cell_dims)
+        flux_monitor1 = self._get_flux_region(sim=sim1, direction=cable_orientation)
         if self.analysis_config.dimensionality == Dimensionality.TWO_DIMENSIONAL:
             plot_surfaces(
-                sim=sim,
+                sim=sim1,
                 output_folder=self.output_folder,
                 file_name="vswr_surfaces_only_cable",
             )
-        sim.run(until=SIM_TIMESTEPS)
-        normalization_run = sim.get_flux_data(flux_monitor)
-        normalization_flux = mp.get_fluxes(flux_monitor)
-        sim.reset_meep()
+        sim1.run(until=SIM_TIMESTEPS)
+        normalization_run = sim1.get_flux_data(flux_monitor1)
+        normalization_flux = mp.get_fluxes(flux_monitor1)
 
         self._create_antennas()
-        sim = self.setup_sim()
-        flux_monitor = self._get_flux_region(sim=sim)
+        sim2 = self.setup_sim(cell_dims=cell_dims)
+        flux_monitor2 = self._get_flux_region(sim=sim2, direction=cable_orientation)
         if self.analysis_config.dimensionality == Dimensionality.TWO_DIMENSIONAL:
             plot_surfaces(
-                sim=sim, output_folder=self.output_folder, file_name="vswr_surfaces"
+                sim=sim2, output_folder=self.output_folder, file_name="vswr_surfaces"
             )
-        sim.load_minus_flux_data(flux_monitor, normalization_run)
-        sim.run(until=SIM_TIMESTEPS)
-        reflection_flux = mp.get_fluxes(flux_monitor)
-        flux_frequencies = mp.get_flux_freqs(flux_monitor)
+        sim2.load_minus_flux_data(flux_monitor2, normalization_run)
+        sim2.run(until=SIM_TIMESTEPS)
+        reflection_flux = mp.get_fluxes(flux_monitor2)
+        flux_frequencies = mp.get_flux_freqs(flux_monitor2)
 
         frequencies = np.array(flux_frequencies)
         gamma = np.abs(np.divide(reflection_flux, normalization_flux))

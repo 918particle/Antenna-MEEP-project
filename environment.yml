@@ -1,4 +1,4 @@
-name: antenna-meep-project
+name: mp
 channels:
   - conda-forge
   - defaults
